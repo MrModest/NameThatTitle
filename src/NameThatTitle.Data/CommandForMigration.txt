@@ -1,0 +1,19 @@
+## Initial DB
+
+NameThatTitle\src\NameThatTitle.Data>dotnet ef migrations add InitialAppIdentity --context AppIdentityContext --startup-project ../NameThatTitle.WebApp/
+NameThatTitle\src\NameThatTitle.Data>dotnet ef migrations add InitialForum --context ForumContext --startup-project ../NameThatTitle.WebApp/
+-------------------------------------------
+
+## For delete mirgations:
+
+1. Delete the state: Delete the migrations folder in your project; And
+2. Delete the __MigrationHistory table in your database (may be under system tables); Then
+3. Run the following command in the Package Manager Console: "Enable-Migrations -EnableAutomaticMigrations -Force"; Use with or without "-EnableAutomaticMigrations"
+4. And finally, you can run: "Add-Migration Initial"
+(source: https://stackoverflow.com/a/11679386/7422280)
+--------------------------------------------
+
+## For create tables in DB:
+
+PM> Update-Database -Context AppIdentityContext
+PM> Update-Database -Context ForumContext
