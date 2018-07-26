@@ -12,6 +12,7 @@ using NameThatTitle.Domain.Interfaces.Services;
 using NameThatTitle.Domain.Models;
 using NameThatTitle.Domain.Models.Token;
 using NameThatTitle.Domain.Models.Users;
+using NameThatTitle.Domain.Utils;
 
 namespace NameThatTitle.Domain.Services
 {
@@ -48,6 +49,8 @@ namespace NameThatTitle.Domain.Services
 
         public async Task<ResultOrErrors<OAuthToken>> SignUpAsync(string username, string email, string password)
         {
+            _logger.LogInformation($"init create new user with username: {username} and email: {email}");
+
             var errors = new List<string>();
 
             if (String.IsNullOrEmpty(username)) { errors.Add("Username is empty!");  }
@@ -56,6 +59,8 @@ namespace NameThatTitle.Domain.Services
 
             if (errors.Count > 0)
             {
+                _logger.LogWarning("skip empty input");
+
                 return new ResultOrErrors<OAuthToken>(errors);
             }
 
@@ -81,14 +86,20 @@ namespace NameThatTitle.Domain.Services
                     UserId = userAccount.Id
                 });
 
+                _logger.LogInformation($"successfully created new user with id: {userAccount.Id}, username: {username} and email: {email} | rTokenLength: {oAuth.RefreshToken.Length} | aToken: {oAuth.AccessToken.Length}");
+
                 return new ResultOrErrors<OAuthToken>(oAuth);
             }
+
+            _logger.LogWarning("fail creating");
 
             return new ResultOrErrors<OAuthToken>(result.Errors.Select(e => e.Description));
         }
 
         public async Task<ResultOrErrors<OAuthToken>> SignInAsync(string login, string password)
         {
+            _logger.LogInformation($"init sing in user with login: {login}");
+
             var errors = new List<string>();
 
             if (String.IsNullOrEmpty(login)) { errors.Add("Username/Email is empty!"); }
@@ -96,6 +107,8 @@ namespace NameThatTitle.Domain.Services
 
             if (errors.Count > 0)
             {
+                _logger.LogWarning("skip empty input");
+
                 return new ResultOrErrors<OAuthToken>(errors);
             }
 
@@ -105,6 +118,8 @@ namespace NameThatTitle.Domain.Services
 
             if (userAccount == null)
             {
+                _logger.LogWarning("user not found");
+
                 return new ResultOrErrors<OAuthToken>($"User with username/email {login} not found!");
             }
 
@@ -112,6 +127,8 @@ namespace NameThatTitle.Domain.Services
 
             if (!passValided)
             {
+                _logger.LogWarning("password failed");
+
                 return new ResultOrErrors<OAuthToken>($"Invalid login or password!");
             }
 
@@ -125,15 +142,28 @@ namespace NameThatTitle.Domain.Services
                 UserId = userAccount.Id
             });
 
+            _logger.LogInformation($"user successfully signed in | rTokenLength: {oAuth.RefreshToken.Length} | aTokenLength: {oAuth.AccessToken.Length}");
+
             return new ResultOrErrors<OAuthToken>(oAuth);
         }
 
         public async Task<ResultOrErrors<OAuthToken>> RefreshTokenAsync(string refreshToken)
         {
+            _logger.LogInformation($"init refresh token | rTokenLength: {refreshToken.Length}");
+
+            if (String.IsNullOrWhiteSpace(refreshToken))
+            {
+                _logger.LogWarning("skip empty input");
+
+                return new ResultOrErrors<OAuthToken>("Refresh token is Empty!");
+            }
+
             var currentToken = await _tokenRep.GetByRefreshAsync(refreshToken);
 
             if (currentToken == null)
             {
+                _logger.LogWarning("refresh token not found");
+
                 return new ResultOrErrors<OAuthToken>("Invalid token!");
             }
 
@@ -143,7 +173,9 @@ namespace NameThatTitle.Domain.Services
 
             if (DateTime.Now.Millisecond > expiredDate)
             {
-                return new ResultOrErrors<OAuthToken>("Token is expired!");
+                _logger.LogWarning("refresh token expired");
+
+                return new ResultOrErrors<OAuthToken>("Token expired!");
             }
 
             //? Check `currentToken.UserAccount`
@@ -156,8 +188,10 @@ namespace NameThatTitle.Domain.Services
 
             //var newOAuth = await GetTokenAsync(userAccount);
 
-            if (currentToken.UserAccount == null)
+            if (currentToken.UserAccount == null) //? EF association works?
             {
+                _logger.LogError("user for valid (?!) refresh token not found");
+
                 return new ResultOrErrors<OAuthToken>("User for this token not found!");
             }
 
@@ -172,28 +206,40 @@ namespace NameThatTitle.Domain.Services
             });
             await _tokenRep.DeleteAsync(currentToken);
 
+            _logger.LogInformation($"successfully refreshed token | rTokenLength: {newOAuth.RefreshToken.Length} | aTokenLength: {newOAuth.AccessToken.Length}");
+
             return new ResultOrErrors<OAuthToken>(newOAuth);
         }
 
         public async Task<ResultOrErrors> RevokeTokenAsync(string refreshToken)
         {
+            _logger.LogInformation($"init revoke refresh token {refreshToken}");
+
             var userToken = await _tokenRep.GetByRefreshAsync(refreshToken);
 
             if (userToken == null)
             {
+                _logger.LogWarning("refresh token not found");
+
                 return new ResultOrErrors<OAuthToken>("Invalid token!");
             }
 
             await _tokenRep.DeleteAsync(userToken);
+
+            _logger.LogInformation("token successfully revoked");
 
             return new ResultOrErrors(true);
         }
 
         private async Task<OAuthToken> GetTokenAsync(UserAccount userAccount)
         {
+            _logger.LogInformation($"creating token for user {userAccount.Id}: {userAccount.UserName}");
+
             var principal = await _signInManager.CreateUserPrincipalAsync(userAccount); //ToDo: avatar, languages
 
             var identity = (ClaimsIdentity)principal.Identity;
+
+            _logger.LogInformation("user claims: " + LoggingUtils.ClaimsToJson(identity?.Claims));
 
             if (identity == null)
             {
@@ -201,6 +247,8 @@ namespace NameThatTitle.Domain.Services
             }
 
             var token = _tokenHandler.Create(_configuration["Jwt:Key"], int.Parse(_configuration["Jwt:LifeTimeInMinutes"]), identity.Claims);
+
+            _logger.LogInformation($"token successfully created | rToken: {token.RefreshToken.Length} | aTokenLength: {token.AccessToken.Length}");
 
             return token;
         }
