@@ -22,5 +22,10 @@ namespace NameThatTitle.Domain.Utils
                 value = c.Value
             }));
         }
+
+        public static string EnumerableToJson<T>(IEnumerable<T> list)
+        {
+            return JsonConvert.SerializeObject(list);
+        }
     }
 }
