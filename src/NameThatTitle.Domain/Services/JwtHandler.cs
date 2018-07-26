@@ -43,7 +43,7 @@ namespace NameThatTitle.Domain.Services
 
         private string GetRefreshToken()
         {
-            var token = Guid.NewGuid().ToString().Replace("-", "");
+            var token = Guid.NewGuid().ToString("N");
 
             return token;
         }
