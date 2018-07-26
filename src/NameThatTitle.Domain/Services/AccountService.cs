@@ -61,7 +61,7 @@ namespace NameThatTitle.Domain.Services
 
             var now = DateTime.Now;
             var userAccount = new UserAccount { UserName = username, Email = email, RegisteredAt = now, LastOnlineAt = now};
-            var result = await _userManager.CreateAsync(userAccount, password); //? existing check contains?
+            var result = await _userManager.CreateAsync(userAccount, password); //? check "already exist"?
 
             if (result.Succeeded)
             {
