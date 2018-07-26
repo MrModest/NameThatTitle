@@ -25,7 +25,7 @@ namespace NameThatTitle.WebApp.Controllers
     [Authorize]
     public class AccountController : ControllerBase
     {
-        //private readonly ILogger logger; - NLog not support 2.1 yet
+        private readonly ILogger<AccountController> _logger;
 
         private readonly UserManager<UserAccount> _userManager;
         private readonly SignInManager<UserAccount> _signInManager;
@@ -40,9 +40,11 @@ namespace NameThatTitle.WebApp.Controllers
             ITokenHandler tokenHandler,
             IConfiguration configuration,
             IAsyncRepository<UserProfile> profileRep,
-            IAccountService accountService/*,
-            ILogger logger*/)
+            IAccountService accountService,
+            ILogger<AccountController> logger)
         {
+            _logger = logger;
+
             _userManager = userManager;
             _signInManager = signInManager;
             _tokenHandler = tokenHandler;
@@ -51,7 +53,6 @@ namespace NameThatTitle.WebApp.Controllers
             _accountService = accountService;
 
             //? this.userManager.UserValidators.Add(...) - how add to global?
-            //this.logger = logger;
         }
 
         [HttpPost("[action]")]

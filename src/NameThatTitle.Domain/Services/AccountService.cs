@@ -17,6 +17,8 @@ namespace NameThatTitle.Domain.Services
 {
     public class AccountService : IAccountService
     {
+        private readonly ILogger<AccountService> _logger;
+
         private readonly UserManager<UserAccount> _userManager;
         private readonly SignInManager<UserAccount> _signInManager;
         private readonly ITokenHandler _tokenHandler;
@@ -24,16 +26,17 @@ namespace NameThatTitle.Domain.Services
         private readonly IAsyncRepository<UserProfile> _userProfileRep;
         private readonly IAsyncRefreshTokenRepository _tokenRep;
 
-        //private readonly ILogger _logger;
-
         public AccountService(
             UserManager<UserAccount> userManager,
             SignInManager<UserAccount> signInManager,
             ITokenHandler tokenHandler,
             IConfiguration configuration,
             IAsyncRepository<UserProfile> userProfileRep,
-            IAsyncRefreshTokenRepository refreshTokenRep)
+            IAsyncRefreshTokenRepository refreshTokenRep,
+            ILogger<AccountService> logger)
         {
+            _logger = logger;
+
             _userManager = userManager;
             _signInManager = signInManager;
             _tokenHandler = tokenHandler;
