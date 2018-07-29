@@ -16,6 +16,8 @@ namespace NameThatTitle.Data.DbContexts
         public DbSet<UserProfile> UserProfiles { get; set; }
         public DbSet<UserStatistic> UserStatistics { get; set; }
 
+        public DbSet<PrivateMessage> PrivateMessages { get; set; }
+
         public DbSet<Forum> Forums { get; set; }
         public DbSet<Post> Posts { get; set; }
         public DbSet<Comment> Comments { get; set; }
