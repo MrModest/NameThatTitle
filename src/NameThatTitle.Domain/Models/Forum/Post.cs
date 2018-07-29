@@ -20,6 +20,9 @@ namespace NameThatTitle.Domain.Models.Forum
 
         public virtual ICollection<Comment> Comments { get; set; }
 
+        public virtual ICollection<Subscription> Subscriptions { get; set; }
+        public virtual ICollection<Favorite> Favorites { get; set; }
+
         public int Rating { get; set; } // haven't "-1"; can't be negative
         public bool Solved { get; set; }
 

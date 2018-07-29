@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using NameThatTitle.Domain.Models.Forum;
 
@@ -16,7 +17,10 @@ namespace NameThatTitle.Domain.Models.Users
 
         public virtual UserStatistic Statistic { get; set; }
 
-        public virtual IEnumerable<Post> Posts { get; set; }
-        public virtual IEnumerable<Comment> Comments { get; set; }
+        public virtual ICollection<Post> Posts { get; set; }
+        public virtual ICollection<Comment> Comments { get; set; }
+
+        public virtual ICollection<Subscription> Subscriptions { get; set; }
+        public virtual ICollection<Favorite> Favorites { get; set; }
     }
 }

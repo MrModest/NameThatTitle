@@ -20,6 +20,8 @@ namespace NameThatTitle.Data.DbContexts
         public DbSet<Post> Posts { get; set; }
         public DbSet<Comment> Comments { get; set; }
         //public DbSet<Attachment> Attachments { get; set; }
+        public DbSet<Subscription> Subscriptions { get; set; }
+        public DbSet<Favorite> Favorites { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -32,6 +34,8 @@ namespace NameThatTitle.Data.DbContexts
             builder.Entity<Post>(ConfigurePost);
             builder.Entity<Comment>(ConfigureComment);
             //builder.Entity<Attachment>(ConfigureAttachment);
+            builder.Entity<Subscription>(ConfigureSubscription);
+            builder.Entity<Favorite>(ConfigureFavorite);
         }
 
         private void ConfigureUserProfile(EntityTypeBuilder<UserProfile> builder)
@@ -41,6 +45,15 @@ namespace NameThatTitle.Data.DbContexts
             builder.HasOne(up => up.Statistic)
                 .WithOne(us => us.Profile)
                 .HasForeignKey<UserStatistic>(us => us.Id);
+
+            builder.HasMany(up => up.Subscriptions)
+                .WithOne(s => s.User)
+                .HasForeignKey(s => s.UserId);
+
+            builder.HasMany(up => up.Favorites)
+                .WithOne(f => f.User)
+                .HasForeignKey(f => f.UserId);
+
 
             builder.Ignore(up => up.Account);
         }
@@ -87,6 +100,14 @@ namespace NameThatTitle.Data.DbContexts
             builder.HasMany(p => p.Comments)
                 .WithOne(c => c.Post)
                 .HasForeignKey(c => c.PostId);
+
+            builder.HasMany(p => p.Subscriptions)
+                .WithOne(s => s.Post)
+                .HasForeignKey(s => s.PostId);
+
+            builder.HasMany(p => p.Favorites)
+                .WithOne(f => f.Post)
+                .HasForeignKey(f => f.PostId);
         }
 
         private void ConfigureComment(EntityTypeBuilder<Comment> builder)
@@ -108,6 +129,24 @@ namespace NameThatTitle.Data.DbContexts
             builder.HasOne(c => c.Author)
                 .WithMany(u => u.Comments)
                 .HasForeignKey(c => c.AuthorId);
+        }
+
+        private void ConfigureSubscription(EntityTypeBuilder<Subscription> builder)
+        {
+            builder.HasKey(s => new
+            {
+                s.UserId,
+                s.PostId
+            });
+        }
+
+        private void ConfigureFavorite(EntityTypeBuilder<Favorite> builder)
+        {
+            builder.HasKey(f => new
+            {
+                f.UserId,
+                f.PostId
+            });
         }
     }
 }

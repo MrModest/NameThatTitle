@@ -22,6 +22,7 @@ namespace NameThatTitle.Domain.Models.Forum
         public virtual ICollection<Attachment> Attachments { get; set; } //ToDo: set limit
 
         public int Rating { get; set; } //? "-1" divide by 2 when go to karma
+        public bool Offtopic { get; set; } // "I don't know the answer, but I want to say something"
         public bool CorectAnswer { get; set; }
 
         public DateTime CreatedAt { get; set; }
