@@ -14,6 +14,6 @@ namespace NameThatTitle.Domain.Models.Users
 
         public int Warning { get; set; } // in procent (0 - 100), 100 means ban
 
-        public virtual IEnumerable<RefreshToken> RefreshTokens { get; set; }
+        public virtual ICollection<RefreshToken> RefreshTokens { get; set; }
     }
 }
