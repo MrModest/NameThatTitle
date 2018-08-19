@@ -35,13 +35,14 @@ namespace NameThatTitle.WebApp.Controllers
         private readonly IAccountService _accountService;
 
         public AccountController(
+            ILogger<AccountController> logger,
+
             UserManager<UserAccount> userManager,
             SignInManager<UserAccount> signInManager,
             ITokenHandler tokenHandler,
             IConfiguration configuration,
             IAsyncRepository<UserProfile> profileRep,
-            IAccountService accountService,
-            ILogger<AccountController> logger)
+            IAccountService accountService)
         {
             _logger = logger;
 
