@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using NameThatTitle.Domain.Interfaces.Repositories;
 using NameThatTitle.Domain.Interfaces.Services;
@@ -19,6 +20,7 @@ namespace NameThatTitle.Domain.Services
     public class AccountService : IAccountService
     {
         private readonly ILogger<AccountService> _logger;
+        private readonly IStringLocalizer<AccountService> _localizer;
 
         private readonly UserManager<UserAccount> _userManager;
         private readonly SignInManager<UserAccount> _signInManager;
@@ -28,15 +30,18 @@ namespace NameThatTitle.Domain.Services
         private readonly IAsyncRefreshTokenRepository _tokenRep;
 
         public AccountService(
+            ILogger<AccountService> logger,
+            IStringLocalizer<AccountService> localizer,
+
             UserManager<UserAccount> userManager,
             SignInManager<UserAccount> signInManager,
             ITokenHandler tokenHandler,
             IConfiguration configuration,
             IAsyncRepository<UserProfile> userProfileRep,
-            IAsyncRefreshTokenRepository refreshTokenRep,
-            ILogger<AccountService> logger)
+            IAsyncRefreshTokenRepository refreshTokenRep)
         {
             _logger = logger;
+            _localizer = localizer;
 
             _userManager = userManager;
             _signInManager = signInManager;
@@ -53,9 +58,9 @@ namespace NameThatTitle.Domain.Services
 
             var errors = new List<string>();
 
-            if (String.IsNullOrEmpty(username)) { errors.Add("Username is empty!");  }
-            if (String.IsNullOrEmpty(email)) { errors.Add("Email is empty!"); }
-            if (String.IsNullOrEmpty(password)) { errors.Add("Password is empty!"); }
+            if (String.IsNullOrEmpty(username)) { errors.Add(_localizer["Username is empty!"]); }
+            if (String.IsNullOrEmpty(email))    { errors.Add(_localizer["Email is empty!"]);    }
+            if (String.IsNullOrEmpty(password)) { errors.Add(_localizer["Password is empty!"]); }
 
             if (errors.Count > 0)
             {
@@ -102,8 +107,8 @@ namespace NameThatTitle.Domain.Services
 
             var errors = new List<string>();
 
-            if (String.IsNullOrEmpty(login)) { errors.Add("Username/Email is empty!"); }
-            if (String.IsNullOrEmpty(password)) { errors.Add("Password is empty!"); }
+            if (String.IsNullOrEmpty(login))    { errors.Add(_localizer["Username/Email is empty!"]); }
+            if (String.IsNullOrEmpty(password)) { errors.Add(_localizer["Password is empty!"]);       }
 
             if (errors.Count > 0)
             {
@@ -120,7 +125,7 @@ namespace NameThatTitle.Domain.Services
             {
                 _logger.LogWarning("user not found");
 
-                return new ResultOrErrors<OAuthToken>($"User with username/email {login} not found!");
+                return new ResultOrErrors<OAuthToken>(_localizer["User with username/email {0} not found!", login]);
             }
 
             var passValided = await _userManager.CheckPasswordAsync(userAccount, password);
@@ -129,7 +134,7 @@ namespace NameThatTitle.Domain.Services
             {
                 _logger.LogWarning("password failed");
 
-                return new ResultOrErrors<OAuthToken>($"Invalid login or password!");
+                return new ResultOrErrors<OAuthToken>(_localizer["Invalid login or password!"]);
             }
 
             var oAuth = await GetTokenAsync(userAccount);
@@ -155,7 +160,7 @@ namespace NameThatTitle.Domain.Services
             {
                 _logger.LogWarning("skip empty input");
 
-                return new ResultOrErrors<OAuthToken>("Refresh token is Empty!");
+                return new ResultOrErrors<OAuthToken>(_localizer["Refresh token is Empty!"]);
             }
 
             var currentToken = await _tokenRep.GetByRefreshAsync(refreshToken);
@@ -164,7 +169,7 @@ namespace NameThatTitle.Domain.Services
             {
                 _logger.LogWarning("refresh token not found");
 
-                return new ResultOrErrors<OAuthToken>("Invalid token!");
+                return new ResultOrErrors<OAuthToken>(_localizer["Invalid refresh token!"]);
             }
 
             var lifetime = (long)(TimeSpan.FromDays(int.Parse(_configuration["Jwt:RefreshLifeTimeInDays"])).TotalMilliseconds);
@@ -175,7 +180,7 @@ namespace NameThatTitle.Domain.Services
             {
                 _logger.LogWarning("refresh token expired");
 
-                return new ResultOrErrors<OAuthToken>("Token expired!");
+                return new ResultOrErrors<OAuthToken>(_localizer["Refresh token expired!"]);
             }
 
             //? Check `currentToken.UserAccount`
@@ -192,7 +197,7 @@ namespace NameThatTitle.Domain.Services
             {
                 _logger.LogError("user for valid (?!) refresh token not found");
 
-                return new ResultOrErrors<OAuthToken>("User for this token not found!");
+                return new ResultOrErrors<OAuthToken>(_localizer["User for this refresh token not found!"]);
             }
 
             var newOAuth = await GetTokenAsync(currentToken.UserAccount);
@@ -221,7 +226,7 @@ namespace NameThatTitle.Domain.Services
             {
                 _logger.LogWarning("refresh token not found");
 
-                return new ResultOrErrors<OAuthToken>("Invalid token!");
+                return new ResultOrErrors<OAuthToken>(_localizer["Invalid refresh token!"]);
             }
 
             await _tokenRep.DeleteAsync(userToken);

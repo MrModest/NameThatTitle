@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 namespace NameThatTitle.Domain.Static
@@ -20,6 +21,12 @@ namespace NameThatTitle.Domain.Static
             {
                 public const int MaxLength = 250;
             }
+        }
+
+        public static class Culture
+        {
+            public readonly static CultureInfo En = new CultureInfo("en");
+            public readonly static CultureInfo Ru = new CultureInfo("ru");
         }
     }
 }

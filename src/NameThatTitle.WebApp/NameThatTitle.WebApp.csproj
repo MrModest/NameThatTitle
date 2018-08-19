@@ -16,6 +16,8 @@
 
   <ItemGroup>
     <Folder Include="ClientApp\" />
+    <Folder Include="Localizations\NameThatTitle\Domain\Services\" />
+    <Folder Include="Localizations\NameThatTitle\WebApp\" />
   </ItemGroup>
 
   <ItemGroup>

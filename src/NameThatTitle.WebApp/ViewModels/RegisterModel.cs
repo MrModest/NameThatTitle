@@ -9,19 +9,19 @@ namespace NameThatTitle.WebApp.ViewModels
 {
     public class RegisterModel
     {
-        [Required(ErrorMessage = "")]
+        [Required(ErrorMessage = "UserName is required!")]
         //[Display(Name = "")]
         [JsonProperty("username")]
         public string UserName { get; set; }
 
-        [Required(ErrorMessage = "")]
+        [Required(ErrorMessage = "Email is required!")]
         [EmailAddress]
         //[Display(Name = "")]
         [DataType(DataType.EmailAddress)]
         [JsonProperty("email")]
         public string Email { get; set; }
 
-        [Required(ErrorMessage = "")]
+        [Required(ErrorMessage = "Password is required!")]
         //[Display(Name = "")]
         [DataType(DataType.Password)]
         [JsonProperty("password")]
@@ -29,7 +29,7 @@ namespace NameThatTitle.WebApp.ViewModels
 
         //[Display(Name = "")]
         [DataType(DataType.Password)]
-        [Compare("Password", ErrorMessage = "")]
+        [Compare("Password", ErrorMessage = "Confirm password must be equil to password!")]
         [JsonProperty("confirm_password")]
         public string ConfirmPassword { get; set; }
     }

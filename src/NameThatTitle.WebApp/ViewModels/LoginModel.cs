@@ -9,12 +9,12 @@ namespace NameThatTitle.WebApp.ViewModels
 {
     public class LoginModel
     {
-        [Required(ErrorMessage = "")]
+        [Required(ErrorMessage = "Login is required!")]
         //[Display(Name = "")]
         [JsonProperty("login")]
         public string Login { get; set; }
 
-        [Required(ErrorMessage = "")]
+        [Required(ErrorMessage = "Password is required!")]
         //[Display(Name = "")]
         [DataType(DataType.Password)]
         [JsonProperty("password")]

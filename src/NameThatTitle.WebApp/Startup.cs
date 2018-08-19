@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
@@ -22,6 +24,9 @@ using NameThatTitle.Domain.Interfaces.Repositories;
 using NameThatTitle.Domain.Interfaces.Services;
 using NameThatTitle.Domain.Models.Users;
 using NameThatTitle.Domain.Services;
+using NameThatTitle.Domain.Static;
+using NameThatTitle.Domain.Utils;
+using NameThatTitle.WebApp.Infrastructure;
 
 namespace NameThatTitle.WebApp
 {
@@ -45,6 +50,7 @@ namespace NameThatTitle.WebApp
                 option.UseNpgsql(Configuration["ConnectionStrings:Forum"]));
 
             services.AddIdentity<UserAccount, UserRole>()
+                .AddErrorDescriber<MultiLanguageIdentityErrorDescriber>()
                 .AddEntityFrameworkStores<AppIdentityContext>();
 
             services.Configure<IdentityOptions>(options =>
@@ -99,8 +105,13 @@ namespace NameThatTitle.WebApp
                     .Build();
             });
 
+            services.AddLocalization(options => options.ResourcesPath = "Localizations");
+
             services.AddMvc()
-                .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
+                .AddDataAnnotationsLocalization();
+
+            services.Configure<RequestLocalizationOptions>(LocalizationUtils.ConfigureRequestLocalizationOptions);
 
             services.AddSpaStaticFiles(configuration =>
             {
@@ -119,6 +130,8 @@ namespace NameThatTitle.WebApp
                 app.UseExceptionHandler("/Error"); //ToDo: do it better
                 app.UseHsts();
             }
+
+            app.UseRequestLocalization(); //? Need argument?
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
