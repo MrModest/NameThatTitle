@@ -9,23 +9,6 @@ namespace NameThatTitle.Domain.Utils
 {
     public static class LoggingUtils
     {
-        public static string ClaimsToJson(IEnumerable<Claim> claims)
-        {
-            if (claims == null || claims.Count() == 0)
-            {
-                return "[no claims]";
-            }
-
-            return JsonConvert.SerializeObject(claims.Select(c => new
-            {
-                type = c.Type,
-                value = c.Value
-            }));
-        }
-
-        public static string EnumerableToJson<T>(IEnumerable<T> list)
-        {
-            return JsonConvert.SerializeObject(list);
-        }
+        
     }
 }

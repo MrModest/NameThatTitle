@@ -9,5 +9,7 @@ namespace NameThatTitle.Domain.Interfaces.Services
     public interface ITokenHandler
     {
         OAuthToken Create(string secretKey, int expiresMinutes, IEnumerable<Claim> claims);
+
+        IEnumerable<Claim> GetClaimsFromToken(string accessToken);
     }
 }

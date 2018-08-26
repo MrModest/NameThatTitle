@@ -13,10 +13,11 @@ namespace NameThatTitle.Domain.Interfaces.Repositories
 
         Task<RefreshToken> GetByRefreshAsync(string token);
         Task<RefreshToken> GetByAccessAsync(string token);
-        Task<RefreshToken> GetByUserIdAsync(int userId);
+        Task<IEnumerable<RefreshToken>> GetByUserIdAsync(int userId);
 
         Task<RefreshToken> AddAsync(RefreshToken token);
         Task<RefreshToken> UpdateAsync(RefreshToken token);
         Task DeleteAsync(RefreshToken token);
+        Task DeleteAsync(IEnumerable<RefreshToken> tokens);
     }
 }

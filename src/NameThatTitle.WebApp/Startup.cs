@@ -93,7 +93,7 @@ namespace NameThatTitle.WebApp
 
                         ValidateLifetime = true,
 
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["Jwt:Key"])),
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["Token:Key"])),
                         ValidateIssuerSigningKey = true,
                     };
                 });

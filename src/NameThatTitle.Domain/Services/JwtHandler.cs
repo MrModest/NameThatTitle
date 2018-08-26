@@ -34,14 +34,28 @@ namespace NameThatTitle.Domain.Services
                 AccessToken = encodedJwt,
                 TokenType = "bearer",
                 ExpiresIn = expiresIn,
-                RefreshToken = GetRefreshToken(),
+                RefreshToken = GenerateRefreshToken(),
                 CreatedAt = createdAt
             };
 
             return oAuthToken;
         }
 
-        private string GetRefreshToken()
+        public IEnumerable<Claim> GetClaimsFromToken(string accessToken)
+        {
+            try
+            {
+                var token = new JwtSecurityTokenHandler().ReadJwtToken(accessToken);
+
+                return token.Claims;
+            }
+            catch (Exception ex) when (ex is ArgumentNullException || ex is ArgumentException)
+            {
+                return null;
+            }
+        }
+
+        private string GenerateRefreshToken()
         {
             var token = Guid.NewGuid().ToString("N");
 

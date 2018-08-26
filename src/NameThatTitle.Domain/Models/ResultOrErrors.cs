@@ -1,17 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace NameThatTitle.Domain.Models
 {
     public class ResultOrErrors
     {
-        public IEnumerable<string> Errors { get; set; }
-        public bool Succeeded { get; set; }
+        public IEnumerable<string> Errors { get; }
+        public bool Succeeded { get; }
 
-        public ResultOrErrors() { }
+        public static ResultOrErrors SuccessResult =>
+            new ResultOrErrors(true);
 
-        public ResultOrErrors(bool succeeded)
+        //public ResultOrErrors() { }
+
+        protected ResultOrErrors(bool succeeded)
         {
             Succeeded = succeeded;
         }
@@ -22,25 +26,20 @@ namespace NameThatTitle.Domain.Models
             Succeeded = false;
         }
 
-        public ResultOrErrors(string error)
-        {
-            Errors = new string[] { error };
-            Succeeded = false;
-        }
+        public ResultOrErrors(params string[] errors) : this(errors.AsEnumerable()) { }
     }
 
     public class ResultOrErrors<TResult> : ResultOrErrors
     {
-        public TResult Result { get; set; }
+        public TResult Result { get; }
 
-        public ResultOrErrors(TResult result)
+        public ResultOrErrors(TResult result) : base(true)
         {
             Result = result;
-            Succeeded = true;
         }
 
         public ResultOrErrors(IEnumerable<string> errors) : base(errors) { }
 
-        public ResultOrErrors(string error) : base (error) { }
+        public ResultOrErrors(params string[] errors) : base(errors.AsEnumerable()) { }
     }
 }

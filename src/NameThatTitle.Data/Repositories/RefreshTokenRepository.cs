@@ -24,17 +24,17 @@ namespace NameThatTitle.Data.Repositories
 
         public async Task<RefreshToken> GetByAccessAsync(string token)
         {
-            return await _context.RefreshTokens.FirstOrDefaultAsync(t => t.Access == token);
+            return await _context.RefreshTokens.Include(rt => rt.UserAccount).FirstOrDefaultAsync(t => t.Access == token);
         }
 
         public async Task<RefreshToken> GetByRefreshAsync(string token)
         {
-            return await _context.RefreshTokens.FirstOrDefaultAsync(t => t.Refresh == token);
+            return await _context.RefreshTokens.Include(rt => rt.UserAccount).FirstOrDefaultAsync(t => t.Refresh == token);
         }
 
-        public async Task<RefreshToken> GetByUserIdAsync(int userId)
+        public async Task<IEnumerable<RefreshToken>> GetByUserIdAsync(int userId)
         {
-            return await _context.RefreshTokens.FirstOrDefaultAsync(t => t.UserId == userId);
+            return await _context.RefreshTokens.Where(t => t.UserId == userId).Include(rt => rt.UserAccount).ToListAsync();
         }
 
 
@@ -57,6 +57,12 @@ namespace NameThatTitle.Data.Repositories
         public async Task DeleteAsync(RefreshToken token)
         {
             _context.RefreshTokens.Remove(token);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(IEnumerable<RefreshToken> tokens)
+        {
+            _context.RefreshTokens.RemoveRange(tokens);
             await _context.SaveChangesAsync();
         }
     }

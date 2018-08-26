@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Logging;
+using NameThatTitle.Domain.Services;
 
 namespace NameThatTitle.Domain.Utils
 {
@@ -31,18 +32,16 @@ namespace NameThatTitle.Domain.Utils
                 return NullProviderCultureResult;
             }
 
-            JwtSecurityToken token;
+            var accessToken = headers[0].Replace(TokenType, "").Trim();
 
-            try
-            {
-                token = new JwtSecurityToken(headers[0].Replace(TokenType, "").Trim());
-            }
-            catch (ArgumentException ex)
+            var claims = new JwtHandler().GetClaimsFromToken(accessToken); //? Should I use DI from httpContext for inject ITokenHandler?
+
+            if (claims == null || claims.Count() == 0)
             {
                 return NullProviderCultureResult;
             }
 
-            var cultureName = token.Claims.FirstOrDefault(c => c.Type == UserPreferenceParamName)?.Value;
+            var cultureName = claims.FirstOrDefault(c => c.Type == UserPreferenceParamName)?.Value;
 
             if (String.IsNullOrWhiteSpace(cultureName))
             {

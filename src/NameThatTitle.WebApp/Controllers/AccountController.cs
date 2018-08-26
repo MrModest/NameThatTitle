@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using NameThatTitle.Domain.Interfaces.Repositories;
 using NameThatTitle.Domain.Interfaces.Services;
+using NameThatTitle.Domain.Extensions;
 using NameThatTitle.Domain.Models.Token;
 using NameThatTitle.Domain.Models.Users;
 using NameThatTitle.WebApp.ViewModels;
@@ -96,6 +97,60 @@ namespace NameThatTitle.WebApp.Controllers
             return BadRequest(result.Errors);
         }
 
+        [HttpPost("[action]")]
+        [AllowAnonymous]
+        public async Task<IActionResult> RefreshToken(string refreshToken)
+        {
+            var result = await _accountService.RefreshTokenAsync(refreshToken);
+
+            if (result.Succeeded)
+            {
+                return Ok(result.Result);
+            }
+
+            return BadRequest(result.Errors);
+        }
+
+        [HttpPost("[action]")]
+        [AllowAnonymous]
+        public async Task<IActionResult> RevokeToken(string refreshToken)
+        {
+            var result = await _accountService.RevokeTokenAsync(refreshToken);
+
+            if (result.Succeeded)
+            {
+                return NoContent();
+            }
+
+            return BadRequest(result.Errors);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RevokeAllTokens()
+        {
+            var result = await _accountService.RevokeAllTokensAsync(User.GetUserId());
+
+            if (result.Succeeded)
+            {
+                return NoContent();
+            }
+
+            return BadRequest(result.Errors);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ChangePassword(string newPassword)
+        {
+            var result = await _accountService.ChangePasswordAsync(User.GetUserId(), newPassword);
+
+            if (result.Succeeded)
+            {
+                return Ok(result.Result);
+            }
+
+            return BadRequest(result.Errors);
+        }
+
         [HttpGet("[action]")]
         [AllowAnonymous]
         public IActionResult Test()
@@ -119,11 +174,7 @@ namespace NameThatTitle.WebApp.Controllers
                 return Ok(Array.Empty<Claim>());
             }
 
-            return Ok(claims.Select(c => new
-            {
-                type = c.Type,
-                value = c.Value
-            }));
+            return Ok(claims.ToJson());
         }
     }
 }
