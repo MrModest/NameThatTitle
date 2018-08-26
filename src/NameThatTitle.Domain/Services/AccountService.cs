@@ -16,7 +16,6 @@ using NameThatTitle.Domain.Models;
 using NameThatTitle.Domain.Models.Token;
 using NameThatTitle.Domain.Models.Users;
 using NameThatTitle.Domain.Static;
-using NameThatTitle.Domain.Utils;
 
 namespace NameThatTitle.Domain.Services
 {
@@ -124,7 +123,6 @@ namespace NameThatTitle.Domain.Services
             }
 
             var userAccount = await _userManager.FindByEmailOrUserNameAsync(login);
-
             if (userAccount == null)
             {
                 _logger.LogWarning("user not found");
