@@ -27,6 +27,16 @@ namespace NameThatTitle.Domain.Models
         }
 
         public ResultOrErrors(params string[] errors) : this(errors.AsEnumerable()) { }
+
+        public virtual void Deconstructor(out IEnumerable<string> errors)
+        {
+            if (Errors == null || Errors?.Count() == 0)
+            {
+                errors = null;
+            }
+
+            errors = Errors;
+        }
     }
 
     public class ResultOrErrors<TResult> : ResultOrErrors
@@ -41,5 +51,11 @@ namespace NameThatTitle.Domain.Models
         public ResultOrErrors(IEnumerable<string> errors) : base(errors) { }
 
         public ResultOrErrors(params string[] errors) : base(errors.AsEnumerable()) { }
+
+        public void Deconstructor(out TResult result, out IEnumerable<string> errors)
+        {
+            base.Deconstructor(out errors);
+            result = Result;
+        }
     }
 }
