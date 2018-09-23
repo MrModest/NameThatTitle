@@ -69,65 +69,62 @@ namespace NameThatTitle.Domain.Services
         }
 
 
-        public async Task<ResultOrErrors<OAuthToken>> SignUpAsync(string username, string email, string password)
+        public async Task<ResultOrErrors<OAuthToken, string>> SignUpAsync(string username, string email, string password)
         {
             _logger.InitMethod(nameof(SignUpAsync), username, email, "pass");
 
-            var errors = new List<string>();
-            if (String.IsNullOrWhiteSpace(username)) { errors.Add(_localizer["Username is empty!"]); }
-            if (String.IsNullOrWhiteSpace(email))    { errors.Add(_localizer["Email is empty!"]);    }
-            if (String.IsNullOrWhiteSpace(password)) { errors.Add(_localizer["Password is empty!"]); }
-            if (errors.Count > 0)
+            var inputErrors = new List<string>();
+            if (String.IsNullOrWhiteSpace(username)) { inputErrors.Add(_localizer["Username is empty!"]); }
+            if (String.IsNullOrWhiteSpace(email))    { inputErrors.Add(_localizer["Email is empty!"]);    }
+            if (String.IsNullOrWhiteSpace(password)) { inputErrors.Add(_localizer["Password is empty!"]); }
+            if (inputErrors.Count > 0)
             {
                 _logger.SkipInvalidInput();
-                return new ResultOrErrors<OAuthToken>(errors);
+                return new ResultOrErrors<OAuthToken, string>(null, inputErrors);
             }
 
             var now = DateTime.Now;
             var userAccount = new UserAccount { UserName = username, Email = email, RegisteredAt = now, LastOnlineAt = now};
-            var result = await _userManager.CreateAsync(userAccount, password); //? check "already exist"?
 
-            if (result.Succeeded)
+            var (_, errors) = (await _userManager.CreateAsync(userAccount, password)).AsTuple(); //? check "already exist"?
+            if (!errors.IsNullOrEmpty())
             {
-                var userProfile = await _userProfileRep.AddAsync(new UserProfile
-                {
-                    Id = userAccount.Id,
-                    UserName = userAccount.UserName
-                });
-
-                var oAuth = await GetTokenAsync(userAccount);
-
-                await _tokenRep.AddAsync(oAuth, userAccount.Id); //ToDo: DeviceName
-
-                _logger.LogInformation($"successfully created new user with id: {userAccount.Id}, username: {username} and email: {email} | rTokenLength: {oAuth.RefreshToken.Length} | aToken: {oAuth.AccessToken.Length}");
-
-                return new ResultOrErrors<OAuthToken>(oAuth);
+                _logger.LogWarning("fail creating");
+                return new ResultOrErrors<OAuthToken, string>(null, errors);
             }
 
-            _logger.LogWarning("fail creating");
+            var userProfile = await _userProfileRep.AddAsync(new UserProfile
+            {
+                Id = userAccount.Id,
+                UserName = userAccount.UserName
+            });
 
-            return new ResultOrErrors<OAuthToken>(result.Errors.Select(e => e.Description));
+            var oAuth = await GetTokenAsync(userAccount);
+
+            await _tokenRep.AddAsync(oAuth, userAccount.Id); //ToDo: DeviceName
+
+            _logger.LogInformation($"successfully created new user with id: {userAccount.Id}, username: {username} and email: {email} | rTokenLength: {oAuth.RefreshToken.Length} | aToken: {oAuth.AccessToken.Length}");
+
+            return new ResultOrErrors<OAuthToken, string>(oAuth, null);
         }
 
-        public async Task<ResultOrErrors<OAuthToken>> SignInAsync(string login, string password)
+        public async Task<ResultOrErrors<OAuthToken, string>> SignInAsync(string login, string password)
         {
             _logger.InitMethod(nameof(SignInAsync), login, "pass");
 
-            var errors = new List<string>();
-            if (String.IsNullOrWhiteSpace(login))    { errors.Add(_localizer["Username/Email is empty!"]); }
-            if (String.IsNullOrWhiteSpace(password)) { errors.Add(_localizer["Password is empty!"]);       }
-            if (errors.Count > 0)
+            var inputErrors = new List<string>();
+            if (String.IsNullOrWhiteSpace(login))    { inputErrors.Add(_localizer["Username/Email is empty!"]); }
+            if (String.IsNullOrWhiteSpace(password)) { inputErrors.Add(_localizer["Password is empty!"]);       }
+            if (inputErrors.Count > 0)
             {
                 _logger.SkipInvalidInput();
-                return new ResultOrErrors<OAuthToken>(errors);
+                return new ResultOrErrors<OAuthToken, string>(null, inputErrors);
             }
 
-            var userAccount = await _userManager.FindByEmailOrUserNameAsync(login);
-            if (userAccount == null)
+            var (userAccount, errors) = (await FindUserByLoginAsync(login)).AsTuple();
+            if (!errors.IsNullOrEmpty())
             {
-                _logger.LogWarning("user not found");
-
-                return new ResultOrErrors<OAuthToken>(_localizer["User with username/email {0} not found!", login]);
+                return new ResultOrErrors<OAuthToken, string>(null, errors);
             }
 
             var passValidated = await _userManager.CheckPasswordAsync(userAccount, password);
@@ -136,7 +133,7 @@ namespace NameThatTitle.Domain.Services
             {
                 _logger.LogWarning("password failed");
 
-                return new ResultOrErrors<OAuthToken>(_localizer["Invalid login or password!"]);
+                return new ResultOrErrors<OAuthToken, string>(null, _localizer["Invalid login or password!"]);
             }
 
             var oAuth = await GetTokenAsync(userAccount);
@@ -145,17 +142,17 @@ namespace NameThatTitle.Domain.Services
 
             _logger.LogInformation($"user successfully signed in | rTokenLength: {oAuth.RefreshToken.Length} | aTokenLength: {oAuth.AccessToken.Length}");
 
-            return new ResultOrErrors<OAuthToken>(oAuth);
+            return new ResultOrErrors<OAuthToken, string>(oAuth, null);
         }
 
-        public async Task<ResultOrErrors<OAuthToken>> RefreshTokenAsync(string refreshToken)
+        public async Task<ResultOrErrors<OAuthToken, string>> RefreshTokenAsync(string refreshToken)
         {
             _logger.InitMethod(nameof(RefreshTokenAsync), $"[Length] {refreshToken?.Length}");
 
             if (String.IsNullOrWhiteSpace(refreshToken))
             {
                 _logger.SkipInvalidInput();
-                return new ResultOrErrors<OAuthToken>(_localizer["Refresh token is Empty!"]);
+                return new ResultOrErrors<OAuthToken, string>(null, _localizer["Refresh token is Empty!"]);
             }
 
             var currentToken = await _tokenRep.GetByRefreshAsync(refreshToken);
@@ -164,7 +161,7 @@ namespace NameThatTitle.Domain.Services
             {
                 _logger.LogWarning("refresh token not found");
 
-                return new ResultOrErrors<OAuthToken>(_localizer["Invalid refresh token!"]);
+                return new ResultOrErrors<OAuthToken, string>(null, _localizer["Invalid refresh token!"]);
             }
 
             var lifetime = (long)(TimeSpan.FromDays(int.Parse(_configuration["Token:RefreshLifeTimeInDays"])).TotalMilliseconds);
@@ -175,14 +172,14 @@ namespace NameThatTitle.Domain.Services
             {
                 _logger.LogWarning("refresh token expired");
 
-                return new ResultOrErrors<OAuthToken>(_localizer["Refresh token expired!"]);
+                return new ResultOrErrors<OAuthToken, string>(null, _localizer["Refresh token expired!"]);
             }
 
             if (currentToken.UserAccount == null) 
             {
                 _logger.LogError("user for valid (?!) refresh token not found");
 
-                return new ResultOrErrors<OAuthToken>(_localizer["User for this refresh token not found!"]);
+                return new ResultOrErrors<OAuthToken, string>(null, _localizer["User for this refresh token not found!"]);
             }
 
             var newOAuth = await GetTokenAsync(currentToken.UserAccount);
@@ -192,17 +189,17 @@ namespace NameThatTitle.Domain.Services
 
             _logger.LogInformation($"successfully refreshed token | rTokenLength: {newOAuth.RefreshToken.Length} | aTokenLength: {newOAuth.AccessToken.Length}");
 
-            return new ResultOrErrors<OAuthToken>(newOAuth);
+            return new ResultOrErrors<OAuthToken, string>(newOAuth, null);
         }
 
-        public async Task<ResultOrErrors> RevokeTokenAsync(string refreshToken)
+        public async Task<ResultOrErrors<string>> RevokeTokenAsync(string refreshToken)
         {
             _logger.InitMethod(nameof(RevokeTokenAsync), $"[Length] {refreshToken?.Length}");
 
             if (String.IsNullOrWhiteSpace(refreshToken))
             {
                 _logger.SkipInvalidInput();
-                return new ResultOrErrors(_localizer["Refresh token is Empty!"]);
+                return new ResultOrErrors<string>(_localizer["Refresh token is Empty!"]);
             }
 
             var currentToken = await _tokenRep.GetByRefreshAsync(refreshToken);
@@ -211,24 +208,24 @@ namespace NameThatTitle.Domain.Services
             {
                 _logger.LogWarning("refresh token not found");
 
-                return new ResultOrErrors<OAuthToken>(_localizer["Invalid refresh token!"]);
+                return new ResultOrErrors<string>(_localizer["Invalid refresh token!"]);
             }
 
             await _tokenRep.DeleteAsync(currentToken);
 
             _logger.LogInformation("token successfully revoked");
 
-            return ResultOrErrors.SuccessResult;
+            return new ResultOrErrors<string>(null);
         }
 
-        public async Task<ResultOrErrors> RevokeAllTokensAsync(int userId)
+        public async Task<ResultOrErrors<string>> RevokeAllTokensAsync(int userId)
         {
             _logger.InitMethod(nameof(RevokeAllTokensAsync), userId);
 
             if (userId < 0)
             {
                 _logger.SkipInvalidInput();
-                return new ResultOrErrors(_localizer["Invalid user's id!"]);
+                return new ResultOrErrors<string>(_localizer["Invalid user's id!"]);
             }
 
             var tokens = await _tokenRep.GetByUserIdAsync(userId);
@@ -237,31 +234,31 @@ namespace NameThatTitle.Domain.Services
 
             _logger.LogInformation("tokens successfully revoked");
 
-            return ResultOrErrors.SuccessResult;
+            return new ResultOrErrors<string>(null);
         }
 
-        public async Task<ResultOrErrors> GenerateValidateTokenForResetPasswordAsync(string email)
+        public async Task<ResultOrErrors<string>> GenerateValidateTokenForResetPasswordAsync(string email)
         {
             _logger.InitMethod(nameof(GenerateValidateTokenForResetPasswordAsync), email);
 
             if (String.IsNullOrWhiteSpace(email))
             {
                 _logger.SkipInvalidInput();
-                return new ResultOrErrors(_localizer["Email is required!"]);
+                return new ResultOrErrors<string>(_localizer["Email is required!"]);
             }
 
             var userAccount = await _userManager.FindByEmailAsync(email);
             if (userAccount == null)
             {
                 _logger.LogWarning("user not found");
-                return new ResultOrErrors(_localizer["User with email '{0}' not found!", email]);
+                return new ResultOrErrors<string>(_localizer["User with email '{0}' not found!", email]);
             }
 
             var validateToken = await _userManager.GeneratePasswordResetTokenAsync(userAccount);
 
             _logger.LogInformation($"validateTokenLength: {validateToken?.Length}");
 
-            if (String.IsNullOrWhiteSpace(validateToken)) { return new ResultOrErrors("Can't generate validate token!"); }
+            if (String.IsNullOrWhiteSpace(validateToken)) { return new ResultOrErrors<string>(_localizer["Can't generate validate token!"]); }
 
             await _emailSender.SendEmailAsync(new SendEmailOptions
             {
@@ -272,70 +269,68 @@ namespace NameThatTitle.Domain.Services
 
             _logger.LogInformation($"validate token sent to mail {userAccount.Email}");
 
-            return ResultOrErrors.SuccessResult;
+            return new ResultOrErrors<string>(null);
         }
 
-        public async Task<ResultOrErrors<OAuthToken>> ResetPasswordAsync(int userId, string validateToken, string newPassword)
+        public async Task<ResultOrErrors<OAuthToken, string>> ResetPasswordAsync(int userId, string validateToken, string newPassword)
         {
             _logger.InitMethod(nameof(ResetPasswordAsync), userId, $"[Length] {validateToken?.Length}", "newPass");
 
-            var errors = new List<string>();
-            if (userId < 0)                               { errors.Add(_localizer["Invalid user's id!"]); }
-            if (String.IsNullOrWhiteSpace(validateToken)) { errors.Add(_localizer["Validate token is empty!"]); }
-            if (String.IsNullOrWhiteSpace(newPassword))   { errors.Add(_localizer["New password is empty!"]); }
-            if (errors.Count > 0)
+            var inputErrors = new List<string>();
+            if (userId < 0)                               { inputErrors.Add(_localizer["Invalid user's id!"]); }
+            if (String.IsNullOrWhiteSpace(validateToken)) { inputErrors.Add(_localizer["Validate token is empty!"]); }
+            if (String.IsNullOrWhiteSpace(newPassword))   { inputErrors.Add(_localizer["New password is empty!"]); }
+            if (inputErrors.Count > 0)
             {
                 _logger.SkipInvalidInput();
-                return new ResultOrErrors<OAuthToken>(errors);
+                return new ResultOrErrors<OAuthToken, string>(null, inputErrors);
             }
 
-            var userAccount = await _userManager.FindByIdAsync(userId.ToString());
-            if (userAccount == null)
+            var (userAccount, errors) = (await FindUserByIdAsync(userId)).AsTuple();
+            if (!errors.IsNullOrEmpty())
             {
-                _logger.LogWarning($"user not found");
-                return new ResultOrErrors<OAuthToken>(_localizer["User with id '{0}' not found!", userId]);
+                return new ResultOrErrors<OAuthToken, string>(null, errors);
             }
 
-            var result = await _userManager.ResetPasswordAsync(userAccount, validateToken, newPassword);
-
-            if (result.Succeeded)
+            (_, errors) = (await _userManager.ResetPasswordAsync(userAccount, validateToken, newPassword)).AsTuple();
+            if (!errors.IsNullOrEmpty())
             {
-                _logger.LogInformation("password has changed");
-
-                return await RevokeAllTokensAndGetNewAsync(userAccount);
+                _logger.LogWarning("fail reset password");
+                return new ResultOrErrors<OAuthToken, string>(null, errors);
             }
 
-            return new ResultOrErrors<OAuthToken>(result.Errors.Select(e => e.Description));
+            _logger.LogInformation("password has changed");
+
+            return await RevokeAllTokensAndGetNewAsync(userAccount);
         }
 
-        public async Task<ResultOrErrors> GenerateValidateTokenForConfirmEmailAsync(int userId)
+        public async Task<ResultOrErrors<string>> GenerateValidateTokenForConfirmEmailAsync(int userId)
         {
             _logger.InitMethod(nameof(GenerateValidateTokenForConfirmEmailAsync), userId);
 
             if (userId < 0)
             {
                 _logger.SkipInvalidInput();
-                return new ResultOrErrors(_localizer["Invalid user's id!"]);
+                return new ResultOrErrors<string>(_localizer["Invalid user's id!"]);
             }
 
-            var userAccount = await _userManager.FindByIdAsync(userId.ToString());
-            if (userAccount == null)
+            var (userAccount, errors) = (await FindUserByIdAsync(userId)).AsTuple();
+            if (!errors.IsNullOrEmpty())
             {
-                _logger.LogWarning("user not found");
-                return new ResultOrErrors<OAuthToken>(_localizer["User with id '{0}' not found!", userId]);
+                return new ResultOrErrors<string>(errors);
             }
 
             if (userAccount.EmailConfirmed)
             {
                 _logger.LogWarning("email already confirmed");
-                return new ResultOrErrors(_localizer["Email {0} is already confirmed!"]);
+                return new ResultOrErrors<string>(_localizer["Email {0} is already confirmed!"]);
             }
 
             var validateToken = await _userManager.GenerateEmailConfirmationTokenAsync(userAccount);
 
             _logger.LogInformation($"validateTokenLength: {validateToken?.Length}");
 
-            if (String.IsNullOrWhiteSpace(validateToken)) { return new ResultOrErrors("Can't generate validate token!"); }
+            if (String.IsNullOrWhiteSpace(validateToken)) { return new ResultOrErrors<string>(_localizer["Can't generate validate token!"]); }
 
             await _emailSender.SendEmailAsync(new SendEmailOptions
             {
@@ -346,35 +341,36 @@ namespace NameThatTitle.Domain.Services
 
             _logger.LogInformation($"validate token sent to mail {userAccount.Email}");
 
-            return ResultOrErrors.SuccessResult;
+            return new ResultOrErrors<string>(null);
         }
 
-        public async Task<ResultOrErrors> ConfirmEmailAsync(int userId, string validateToken)
+        public async Task<ResultOrErrors<string>> ConfirmEmailAsync(int userId, string validateToken)
         {
             _logger.InitMethod(nameof(ConfirmEmailAsync), userId, $"[Length] {validateToken?.Length}");
 
-            var errors = new List<string>();
-            if (userId < 0) { errors.Add(_localizer["Invalid user's id!"]); }
-            if (String.IsNullOrWhiteSpace(validateToken)) { errors.Add(_localizer["Validate token is empty!"]); }
-            if (errors.Count > 0)
+            var inputErrors = new List<string>();
+            if (userId < 0) { inputErrors.Add(_localizer["Invalid user's id!"]); }
+            if (String.IsNullOrWhiteSpace(validateToken)) { inputErrors.Add(_localizer["Validate token is empty!"]); }
+            if (inputErrors.Count > 0)
             {
                 _logger.SkipInvalidInput();
-                return new ResultOrErrors<OAuthToken>(errors);
+                return new ResultOrErrors<string>(inputErrors);
             }
 
-            var userAccount = await _userManager.FindByIdAsync(userId.ToString());
-            if (userAccount == null)
+            var (userAccount, errors) = (await FindUserByIdAsync(userId)).AsTuple();
+            if (!errors.IsNullOrEmpty())
             {
-                _logger.LogWarning("user not found");
-                return new ResultOrErrors<OAuthToken>(_localizer["User with id '{0}' not found!", userId]);
+                return new ResultOrErrors<string>(errors);
             }
 
-            var result = await _userManager.ConfirmEmailAsync(userAccount, validateToken); // EmailConfirmed set true inside
-            if (result.Succeeded)
+            var result = (await _userManager.ConfirmEmailAsync(userAccount, validateToken)).AsTuple(); // EmailConfirmed set true inside
+            if (!errors.IsNullOrEmpty())
             {
-                _logger.LogInformation("email successefully confirmed");
-                return ResultOrErrors.SuccessResult;
+                _logger.LogWarning("fail confirmation token");
+                return new ResultOrErrors<string>(errors);
             }
+
+            _logger.LogInformation("email successefully confirmed");
 
             await _emailSender.SendEmailAsync(new SendEmailOptions
             {
@@ -383,108 +379,105 @@ namespace NameThatTitle.Domain.Services
                 Body = await _emailBodyBuilder.BuildAsync(StaticData.EmailTemplate.EmailConfirmed, userAccount.UserName)
             });
 
-            return new ResultOrErrors(result.Errors.Select(e => e.Description));
+            return new ResultOrErrors<string>(null);
         }
 
-        public async Task<ResultOrErrors<OAuthToken>> ChangePasswordAsync(int userId, string currentPassword, string newPassword)
+        public async Task<ResultOrErrors<OAuthToken, string>> ChangePasswordAsync(int userId, string currentPassword, string newPassword)
         {
             _logger.InitMethod(nameof(ChangePasswordAsync), userId, "currPass", "newPass");
 
-            var errors = new List<string>();
-            if (userId < 0) { errors.Add(_localizer["Invalid user's id!"]); }
-            if (String.IsNullOrWhiteSpace(currentPassword)) { errors.Add(_localizer["Old password is empty!"]); }
-            if (String.IsNullOrWhiteSpace(newPassword)) { errors.Add(_localizer["New password is empty!"]); }
-            if (errors.Count > 0)
+            var inputErrors = new List<string>();
+            if (userId < 0) { inputErrors.Add(_localizer["Invalid user's id!"]); }
+            if (String.IsNullOrWhiteSpace(currentPassword)) { inputErrors.Add(_localizer["Old password is empty!"]); }
+            if (String.IsNullOrWhiteSpace(newPassword)) { inputErrors.Add(_localizer["New password is empty!"]); }
+            if (inputErrors.Count > 0)
             {
                 _logger.SkipInvalidInput();
-                return new ResultOrErrors<OAuthToken>(errors);
+                return new ResultOrErrors<OAuthToken, string>(null, inputErrors);
             }
 
-            var userAccount = await _userManager.FindByIdAsync(userId.ToString());
-            if (userAccount == null)
+            var (userAccount, errors) = (await FindUserByIdAsync(userId)).AsTuple();
+            if (!errors.IsNullOrEmpty())
             {
-                _logger.LogWarning("user not found");
-                return new ResultOrErrors<OAuthToken>(_localizer["User with id '{0}' not found!", userId]);
+                return new ResultOrErrors<OAuthToken, string>(null, errors);
             }
 
-            var result = await _userManager.ChangePasswordAsync(userAccount, currentPassword, newPassword);
-
-            if (result.Succeeded)
+            (_, errors) = (await _userManager.ChangePasswordAsync(userAccount, currentPassword, newPassword)).AsTuple();
+            if (!errors.IsNullOrEmpty())
             {
-                _logger.LogInformation("password has changed");
-
-                return await RevokeAllTokensAndGetNewAsync(userAccount);
+                _logger.LogWarning("fail changing password");
+                return new ResultOrErrors<OAuthToken, string>(null, errors);
             }
 
-            return new ResultOrErrors<OAuthToken>(result.Errors.Select(e => e.Description));
+            _logger.LogInformation("password has changed");
+
+            return await RevokeAllTokensAndGetNewAsync(userAccount);
         }
 
-        public async Task<ResultOrErrors<OAuthToken>> ChangePasswordAsync(int userId, string newPassword)
+        public async Task<ResultOrErrors<OAuthToken, string>> ChangePasswordAsync(int userId, string newPassword)
         {
             _logger.InitMethod(nameof(ChangePasswordAsync), userId, "newPass");
 
-            var errors = new List<string>();
-            if (userId < 0)                             { errors.Add(_localizer["Invalid user's id!"]); }
-            if (String.IsNullOrWhiteSpace(newPassword)) { errors.Add(_localizer["New password is empty!"]); }
-            if (errors.Count > 0)
+            var inputErrors = new List<string>();
+            if (userId < 0)                             { inputErrors.Add(_localizer["Invalid user's id!"]); }
+            if (String.IsNullOrWhiteSpace(newPassword)) { inputErrors.Add(_localizer["New password is empty!"]); }
+            if (inputErrors.Count > 0)
             {
                 _logger.SkipInvalidInput();
-                return new ResultOrErrors<OAuthToken>(errors);
+                return new ResultOrErrors<OAuthToken, string>(null, inputErrors);
             }
 
-            var userAccount = await _userManager.FindByIdAsync(userId.ToString());
-            if (userAccount == null)
+            var (userAccount, errors) = (await FindUserByIdAsync(userId)).AsTuple();
+            if (!errors.IsNullOrEmpty())
             {
-                _logger.LogWarning($"user not found");
-                return new ResultOrErrors<OAuthToken>(_localizer["User with id '{0}' not found!", userId]);
+                return new ResultOrErrors<OAuthToken, string>(null, errors);
             }
 
             userAccount.PasswordHash = _userManager.PasswordHasher.HashPassword(userAccount, newPassword);
 
-            var result = await _userManager.UpdateAsync(userAccount);
-
-            if (result.Succeeded)
+            (_, errors) = (await _userManager.UpdateAsync(userAccount)).AsTuple();
+            if (!errors.IsNullOrEmpty())
             {
-                _logger.LogInformation("password has changed");
-
-                await _emailSender.SendEmailAsync(new SendEmailOptions
-                {
-                    Email   = userAccount.Email,
-                    Subject = _localizer["Password has changed"],
-                    Body    = await _emailBodyBuilder.BuildAsync(StaticData.EmailTemplate.ProfileHasChanged, userAccount.UserName, "Password")
-                });
-                
-                return await RevokeAllTokensAndGetNewAsync(userAccount);
+                _logger.LogWarning("fail updating password");
+                return new ResultOrErrors<OAuthToken, string>(null, errors);
             }
 
-            return new ResultOrErrors<OAuthToken>(result.Errors.Select(e => e.Description));
+            _logger.LogInformation("password has changed");
+
+            await _emailSender.SendEmailAsync(new SendEmailOptions
+            {
+                Email = userAccount.Email,
+                Subject = _localizer["Password has changed"],
+                Body = await _emailBodyBuilder.BuildAsync(StaticData.EmailTemplate.ProfileHasChanged, userAccount.UserName, "Password")
+            });
+
+            return await RevokeAllTokensAndGetNewAsync(userAccount);
         }
 
-        public async Task<ResultOrErrors> GenerateValidateTokenForChangeEmailAsync(int userId, string newEmail)
+        public async Task<ResultOrErrors<string>> GenerateValidateTokenForChangeEmailAsync(int userId, string newEmail)
         {
             _logger.InitMethod(nameof(GenerateValidateTokenForChangeEmailAsync), userId, newEmail);
 
-            var errors = new List<string>();
-            if (userId < 0) { errors.Add(_localizer["Invalid user's id!"]); }
-            if (String.IsNullOrWhiteSpace(newEmail)) { errors.Add(_localizer["New email is required!"]); }
-            if (errors.Count > 0)
+            var inputErrors = new List<string>();
+            if (userId < 0) { inputErrors.Add(_localizer["Invalid user's id!"]); }
+            if (String.IsNullOrWhiteSpace(newEmail)) { inputErrors.Add(_localizer["New email is required!"]); }
+            if (inputErrors.Count > 0)
             {
                 _logger.SkipInvalidInput();
-                return new ResultOrErrors(errors);
+                return new ResultOrErrors<string>(inputErrors);
             }
 
-            var userAccount = await _userManager.FindByIdAsync(userId.ToString());
-            if (userAccount == null)
+            var (userAccount, errors) = (await FindUserByIdAsync(userId)).AsTuple();
+            if (!errors.IsNullOrEmpty())
             {
-                _logger.LogWarning("user not found");
-                return new ResultOrErrors(_localizer["User with id '{0}' not found!", userId]);
+                return new ResultOrErrors<string>(errors);
             }
 
             var validateToken = await _userManager.GenerateChangeEmailTokenAsync(userAccount, newEmail);
 
             _logger.LogInformation($"validateTokenLength: {validateToken?.Length}");
 
-            if (String.IsNullOrWhiteSpace(validateToken)) { return new ResultOrErrors("Can't generate validate token!"); }
+            if (String.IsNullOrWhiteSpace(validateToken)) { return new ResultOrErrors<string>(_localizer["Can't generate validate token!"]); }
 
             await _emailSender.SendEmailAsync(new SendEmailOptions
             {
@@ -495,76 +488,76 @@ namespace NameThatTitle.Domain.Services
 
             _logger.LogInformation($"validate token sent to mail {userAccount.Email}");
 
-            return ResultOrErrors.SuccessResult;
+            return new ResultOrErrors<string>(null);
         }
 
-        public async Task<ResultOrErrors> ChangeEmailAsync(int userId, string validateToken, string newEmail)
+        public async Task<ResultOrErrors<string>> ChangeEmailAsync(int userId, string validateToken, string newEmail)
         {
             _logger.InitMethod(nameof(ChangeEmailAsync), userId, newEmail);
 
-            var errors = new List<string>();
-            if (userId < 0) { errors.Add(_localizer["Invalid user's id!"]); }
-            if (String.IsNullOrWhiteSpace(validateToken)) { errors.Add(_localizer["Validate token is empty!"]); }
-            if (String.IsNullOrWhiteSpace(newEmail)) { errors.Add(_localizer["New Email is empty!"]); }
-            if (errors.Count > 0)
+            var inputErrors = new List<string>();
+            if (userId < 0) { inputErrors.Add(_localizer["Invalid user's id!"]); }
+            if (String.IsNullOrWhiteSpace(validateToken)) { inputErrors.Add(_localizer["Validate token is empty!"]); }
+            if (String.IsNullOrWhiteSpace(newEmail)) { inputErrors.Add(_localizer["New Email is empty!"]); }
+            if (inputErrors.Count > 0)
             {
                 _logger.SkipInvalidInput();
-                return new ResultOrErrors<OAuthToken>(errors);
+                return new ResultOrErrors<string>(inputErrors);
             }
 
-            var userAccount = await _userManager.FindByIdAsync(userId.ToString());
-            if (userAccount == null)
+            var (userAccount, errors) = (await FindUserByIdAsync(userId)).AsTuple();
+            if (!errors.IsNullOrEmpty())
             {
-                _logger.LogWarning("user not found");
-                return new ResultOrErrors<OAuthToken>(_localizer["User with id '{0}' not found!", userId]);
+                return new ResultOrErrors<string>(errors);
             }
 
-            var result = await _userManager.ChangeEmailAsync(userAccount, newEmail, validateToken); // EmailConfirmed set true inside
-            if (result.Succeeded)
+            (_, errors) = (await _userManager.ChangeEmailAsync(userAccount, newEmail, validateToken)).AsTuple(); // EmailConfirmed set true inside
+            if (!errors.IsNullOrEmpty())
             {
-                _logger.LogInformation("email successefully changed");
-
-                await _emailSender.SendEmailAsync(new SendEmailOptions
-                {
-                    Email = userAccount.Email,
-                    Subject = _localizer["Email has changed"],
-                    Body = await _emailBodyBuilder.BuildAsync(StaticData.EmailTemplate.ProfileHasChanged, userAccount.UserName, "Email")
-                });
-
-                return ResultOrErrors.SuccessResult;
+                _logger.LogWarning("fail changing email");
+                return new ResultOrErrors<string>(errors);
             }
 
-            return new ResultOrErrors(result.Errors.Select(e => e.Description));
+            _logger.LogInformation("email successefully changed");
+
+            await _emailSender.SendEmailAsync(new SendEmailOptions
+            {
+                Email = userAccount.Email,
+                Subject = _localizer["Email has changed"],
+                Body = await _emailBodyBuilder.BuildAsync(StaticData.EmailTemplate.ProfileHasChanged, userAccount.UserName, "Email")
+            });
+
+            return new ResultOrErrors<string>(null);
         }
 
-        public async Task<ResultOrErrors> ChangeUserNameAsync(int userId, string newUserName)
+        public async Task<ResultOrErrors<string>> ChangeUserNameAsync(int userId, string newUserName)
         {
             _logger.InitMethod(nameof(ChangeUserNameAsync), userId, newUserName);
 
-            var errors = new List<string>();
-            if (userId < 0) { errors.Add(_localizer["Invalid user's id!"]); }
-            if (String.IsNullOrWhiteSpace(newUserName)) { errors.Add(_localizer["New username token is empty!"]); }
-            if (errors.Count() > 0)
+            var inputErrors = new List<string>();
+            if (userId < 0) { inputErrors.Add(_localizer["Invalid user's id!"]); }
+            if (String.IsNullOrWhiteSpace(newUserName)) { inputErrors.Add(_localizer["New username token is empty!"]); }
+            if (inputErrors.Count() > 0)
             {
                 _logger.SkipInvalidInput();
-                return new ResultOrErrors(errors);
+                return new ResultOrErrors<string>(inputErrors);
             }
 
-            var userAccount = await _userManager.FindByIdAsync(userId.ToString());
-            if (userAccount == null)
+            var (userAccount, errors) = (await FindUserByIdAsync(userId)).AsTuple();
+            if (!errors.IsNullOrEmpty())
             {
-                _logger.LogWarning("user not found");
-                return new ResultOrErrors<OAuthToken>(_localizer["User with id '{0}' not found!", userId]);
+                return new ResultOrErrors<string>(errors);
             }
 
-            var result = await _userManager.SetUserNameAsync(userAccount, newUserName);
-            if (result.Succeeded)
+            (_, errors) = (await _userManager.SetUserNameAsync(userAccount, newUserName)).AsTuple();
+            if (!errors.IsNullOrEmpty())
             {
-                _logger.SuccessEndMethod(nameof(ChangeUserNameAsync));
-                return ResultOrErrors.SuccessResult;
+                _logger.LogWarning("fail changing username");
+                return new ResultOrErrors<string>(errors);
             }
 
-            return new ResultOrErrors(result.GetErrorDescriptions());
+            _logger.SuccessEndMethod(nameof(ChangeUserNameAsync));
+            return new ResultOrErrors<string>(null);
         }
 
 
@@ -590,28 +583,28 @@ namespace NameThatTitle.Domain.Services
             return token;
         }
 
-        private async Task<ResultOrErrors<OAuthToken>> RevokeAllTokensAndGetNewAsync(UserAccount userAccount)
+        private async Task<ResultOrErrors<OAuthToken, string>> RevokeAllTokensAndGetNewAsync(UserAccount userAccount)
         {
             _logger.InitMethod(nameof(RevokeAllTokensAndGetNewAsync), $"[UserAccount.Id] {userAccount.Id}");
 
-            var revokeResult = await RevokeAllTokensAsync(userAccount.Id);
+            var (_, errors) = (await RevokeAllTokensAsync(userAccount.Id)).AsTuple();
 
-            if (revokeResult.Succeeded)
+            if (!errors.IsNullOrEmpty())
             {
-                _logger.LogInformation("all tokens revoked");
+                _logger.LogWarning("token aren't revoked");
 
-                var oAuth = await GetTokenAsync(userAccount);
-
-                await _tokenRep.AddAsync(oAuth, userAccount.Id); //ToDo: DeviceName
-
-                _logger.LogInformation($"new token is created | aTokenLength: {oAuth.AccessToken.Length} | rTokenLength: {oAuth.RefreshToken.Length}");
-
-                return new ResultOrErrors<OAuthToken>(oAuth);
+                return new ResultOrErrors<OAuthToken, string>(null, errors);
             }
 
-            _logger.LogWarning("token aren't revoked");
+            _logger.LogInformation("all tokens revoked");
 
-            return new ResultOrErrors<OAuthToken>(revokeResult.Errors);
+            var oAuth = await GetTokenAsync(userAccount);
+
+            await _tokenRep.AddAsync(oAuth, userAccount.Id); //ToDo: DeviceName
+
+            _logger.LogInformation($"new token is created | aTokenLength: {oAuth.AccessToken.Length} | rTokenLength: {oAuth.RefreshToken.Length}");
+
+            return new ResultOrErrors<OAuthToken, string>(oAuth, null);
         }
 
         //-------------------------------- Not use zone ----------------------------------------------------------------
@@ -631,7 +624,7 @@ namespace NameThatTitle.Domain.Services
             return token;
         }
 
-        private async Task<ResultOrErrors<UserAccount>> FindUserByIdAsync(int userId) //ToDo: do it better
+        private async Task<ResultOrErrors<UserAccount, string>> FindUserByIdAsync(int userId) //ToDo: do it better
         {
             _logger.InitMethod(nameof(FindUserByIdAsync), userId);
 
@@ -639,15 +632,15 @@ namespace NameThatTitle.Domain.Services
             if (userAccount == null)
             {
                 _logger.LogWarning("user not found");
-                return new ResultOrErrors<UserAccount>(_localizer["User with id '{0}' not found!", userId]);
+                return new ResultOrErrors<UserAccount, string>(null, _localizer["User with id '{0}' not found!", userId]);
             }
 
             _logger.LogInformation($"user found: {userAccount.UserName}");
 
-            return new ResultOrErrors<UserAccount>(userAccount);
+            return new ResultOrErrors<UserAccount, string>(userAccount, null);
         }
 
-        private async Task<ResultOrErrors<UserAccount>> FindUserByLoginAsync(string login) //ToDo: do it better
+        private async Task<ResultOrErrors<UserAccount, string>> FindUserByLoginAsync(string login) //ToDo: do it better
         {
             _logger.InitMethod(nameof(FindUserByLoginAsync), login);
 
@@ -655,12 +648,12 @@ namespace NameThatTitle.Domain.Services
             if (userAccount == null)
             {
                 _logger.LogWarning("user not found");
-                return new ResultOrErrors<UserAccount>(_localizer["User with username/email {0} not found!", login]);
+                return new ResultOrErrors<UserAccount, string>(null, _localizer["User with username/email {0} not found!", login]);
             }
 
             _logger.LogInformation($"user found: {userAccount.UserName}");
 
-            return new ResultOrErrors<UserAccount>(userAccount);
+            return new ResultOrErrors<UserAccount, string>(userAccount, null);
         }
 
         private IEnumerable<string> CheckArgs(IDictionary<string, object> args) //? it's true way?

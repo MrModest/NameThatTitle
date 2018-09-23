@@ -5,57 +5,50 @@ using System.Text;
 
 namespace NameThatTitle.Domain.Models
 {
-    public class ResultOrErrors
+    public class ResultOrErrors<TError>
     {
-        public IEnumerable<string> Errors { get; }
-        public bool Succeeded { get; }
+        public IEnumerable<TError> Errors { get; }
 
-        public static ResultOrErrors SuccessResult =>
-            new ResultOrErrors(true);
+        public bool Succeeded =>
+            Errors == null || Errors.Count() == 0;
 
-        //public ResultOrErrors() { }
-
-        protected ResultOrErrors(bool succeeded)
-        {
-            Succeeded = succeeded;
-        }
-
-        public ResultOrErrors(IEnumerable<string> errors)
+        public ResultOrErrors(IEnumerable<TError> errors)
         {
             Errors = errors;
-            Succeeded = false;
         }
 
-        public ResultOrErrors(params string[] errors) : this(errors.AsEnumerable()) { }
+        public ResultOrErrors(params TError[] errors) 
+            : this(errors.AsEnumerable()) { }
 
-        public virtual void Deconstructor(out IEnumerable<string> errors)
+        public (object, IEnumerable<TError>) AsTuple()
         {
-            if (Errors == null || Errors?.Count() == 0)
-            {
-                errors = null;
-            }
-
-            errors = Errors;
+            return (null, Errors);
         }
     }
 
-    public class ResultOrErrors<TResult> : ResultOrErrors
+    public class ResultOrErrors<TResult, TError> : ResultOrErrors<TError>
     {
         public TResult Result { get; }
 
-        public ResultOrErrors(TResult result) : base(true)
+        public ResultOrErrors(TResult result, IEnumerable<TError> errors) : base(errors)
         {
             Result = result;
         }
 
-        public ResultOrErrors(IEnumerable<string> errors) : base(errors) { }
+        public ResultOrErrors(TResult result, params TError[] errors)
+            : base(errors.AsEnumerable()) { }
 
-        public ResultOrErrors(params string[] errors) : base(errors.AsEnumerable()) { }
-
-        public void Deconstructor(out TResult result, out IEnumerable<string> errors)
+        public new (TResult, IEnumerable<TError>) AsTuple()
         {
-            base.Deconstructor(out errors);
-            result = Result;
+            return (Result, Errors);
+        }
+    }
+
+    public static class ErrorListExtentions
+    {
+        public static bool IsNullOrEmpty<TError>(this IEnumerable<TError> errors)
+        {
+            return errors == null || errors.Count() == 0;
         }
     }
 }

@@ -21,9 +21,9 @@ namespace NameThatTitle.Domain.Extensions
             return int.Parse(userIdStr);
         }
 
-        public static IEnumerable<string> GetErrorDescriptions(this IdentityResult identityResult)
+        public static IEnumerable<string> GetErrorDescriptions(this IdentityResult ir)
         {
-            return identityResult.Errors.Select(e => e.Description);
+            return ir.Errors.Select(e => e.Description);
         }
 
         public static string ToJson(this IEnumerable<Claim> claims)
@@ -38,6 +38,11 @@ namespace NameThatTitle.Domain.Extensions
                 type = c.Type,
                 value = c.Value
             }));
+        }
+
+        public static (object, IEnumerable<string>) AsTuple(this IdentityResult ir)
+        {
+            return (null, ir.GetErrorDescriptions());
         }
     }
 }

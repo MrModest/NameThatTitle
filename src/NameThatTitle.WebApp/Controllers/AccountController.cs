@@ -18,6 +18,7 @@ using NameThatTitle.Domain.Extensions;
 using NameThatTitle.Domain.Models.Token;
 using NameThatTitle.Domain.Models.Users;
 using NameThatTitle.WebApp.ViewModels;
+using NameThatTitle.Domain.Models;
 
 namespace NameThatTitle.WebApp.Controllers
 {
@@ -63,18 +64,17 @@ namespace NameThatTitle.WebApp.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage));
-                return BadRequest(errors);
+                var modelErrors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage));
+                return BadRequest(modelErrors);
             }
 
-            var result = await _accountService.SignUpAsync(model.UserName, model.Email, model.Password);
-
-            if (result.Succeeded)
+            var (oAuthToken, errors) = (await _accountService.SignUpAsync(model.UserName, model.Email, model.Password)).AsTuple();
+            if (!errors.IsNullOrEmpty())
             {
-                return Ok(result.Result);
+                return BadRequest(errors); 
             }
 
-            return BadRequest(result.Errors);
+            return Ok(oAuthToken);
         }
 
         [HttpPost("[action]")]
@@ -83,72 +83,67 @@ namespace NameThatTitle.WebApp.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage));
+                var modelErrors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage));
+                return BadRequest(modelErrors);
+            }
+
+            var (oAuthToken, errors) = (await _accountService.SignInAsync(model.Login, model.Password)).AsTuple();
+            if (!errors.IsNullOrEmpty())
+            {
                 return BadRequest(errors);
             }
 
-            var result = await _accountService.SignInAsync(model.Login, model.Password);
-
-            if (result.Succeeded)
-            {
-                return Ok(result.Result);
-            }
-
-            return BadRequest(result.Errors);
+            return Ok(oAuthToken);
         }
 
         [HttpPost("[action]")]
         [AllowAnonymous]
         public async Task<IActionResult> RefreshToken(string refreshToken)
         {
-            var result = await _accountService.RefreshTokenAsync(refreshToken);
-
-            if (result.Succeeded)
+            var (oAuthToken, errors) = (await _accountService.RefreshTokenAsync(refreshToken)).AsTuple();
+            if (!errors.IsNullOrEmpty())
             {
-                return Ok(result.Result);
+                return BadRequest(errors);
             }
 
-            return BadRequest(result.Errors);
+            return Ok(oAuthToken);
         }
 
         [HttpPost("[action]")]
         [AllowAnonymous]
         public async Task<IActionResult> RevokeToken(string refreshToken)
         {
-            var result = await _accountService.RevokeTokenAsync(refreshToken);
-
-            if (result.Succeeded)
+            var (_, errors) = (await _accountService.RevokeTokenAsync(refreshToken)).AsTuple();
+            if (!errors.IsNullOrEmpty())
             {
-                return NoContent();
+                return BadRequest(errors);
             }
 
-            return BadRequest(result.Errors);
+            return NoContent();
         }
 
         [HttpPost]
         public async Task<IActionResult> RevokeAllTokens()
         {
-            var result = await _accountService.RevokeAllTokensAsync(User.GetUserId());
-
-            if (result.Succeeded)
+            var (_, errors) = (await _accountService.RevokeAllTokensAsync(User.GetUserId())).AsTuple();
+            if (!errors.IsNullOrEmpty())
             {
-                return NoContent();
+                return BadRequest(errors);
             }
 
-            return BadRequest(result.Errors);
+            return NoContent();
         }
 
         [HttpPost]
         public async Task<IActionResult> ChangePassword(string newPassword)
         {
-            var result = await _accountService.ChangePasswordAsync(User.GetUserId(), newPassword);
-
-            if (result.Succeeded)
+            var (oAuthToken, errors) = (await _accountService.ChangePasswordAsync(User.GetUserId(), newPassword)).AsTuple();
+            if (!errors.IsNullOrEmpty())
             {
-                return Ok(result.Result);
+                return BadRequest(errors);
             }
 
-            return BadRequest(result.Errors);
+            return Ok(oAuthToken);
         }
 
         [HttpGet("[action]")]
