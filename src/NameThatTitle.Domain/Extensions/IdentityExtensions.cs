@@ -28,7 +28,7 @@ namespace NameThatTitle.Domain.Extensions
 
         public static string ToJson(this IEnumerable<Claim> claims)
         {
-            if (claims == null || claims.Count() == 0)
+            if (claims == null || !claims.Any())
             {
                 return JsonConvert.SerializeObject(Array.Empty<Claim>());
             }

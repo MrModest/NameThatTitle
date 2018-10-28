@@ -16,7 +16,7 @@ namespace NameThatTitle.Data.DbContexts
     {
         public AppIdentityContext(DbContextOptions<AppIdentityContext> options) : base(options) { }
 
-        public DbSet<RefreshToken> RefreshTokens { get; set; } //? add assotiation: userId -> UserAccount
+        public DbSet<RefreshToken> RefreshTokens { get; set; } //? add associations: userId -> UserAccount
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

@@ -40,7 +40,7 @@ namespace NameThatTitle.Data.DbContexts
             builder.Entity<Favorite>(ConfigureFavorite);
         }
 
-        private void ConfigureUserProfile(EntityTypeBuilder<UserProfile> builder)
+        private static void ConfigureUserProfile(EntityTypeBuilder<UserProfile> builder)
         {
             builder.HasKey(up => up.Id);
 
@@ -60,12 +60,12 @@ namespace NameThatTitle.Data.DbContexts
             builder.Ignore(up => up.Account);
         }
 
-        private void ConfigureUserStatistic(EntityTypeBuilder<UserStatistic> builder)
+        private static void ConfigureUserStatistic(EntityTypeBuilder<UserStatistic> builder)
         {
             builder.HasKey(us => us.Id);
         }
 
-        private void ConfigureForum(EntityTypeBuilder<Forum> builder)
+        private static void ConfigureForum(EntityTypeBuilder<Forum> builder)
         {
             builder.HasKey(f => f.Id);
 
@@ -79,7 +79,7 @@ namespace NameThatTitle.Data.DbContexts
                 .HasForeignKey(p => p.ForumId);
         }
 
-        private void ConfigurePost(EntityTypeBuilder<Post> builder)
+        private static void ConfigurePost(EntityTypeBuilder<Post> builder)
         {
             builder.HasKey(p => p.Id);
 
@@ -112,7 +112,7 @@ namespace NameThatTitle.Data.DbContexts
                 .HasForeignKey(f => f.PostId);
         }
 
-        private void ConfigureComment(EntityTypeBuilder<Comment> builder)
+        private static void ConfigureComment(EntityTypeBuilder<Comment> builder)
         {
             builder.HasKey(c => c.Id);
 
@@ -133,7 +133,7 @@ namespace NameThatTitle.Data.DbContexts
                 .HasForeignKey(c => c.AuthorId);
         }
 
-        private void ConfigureSubscription(EntityTypeBuilder<Subscription> builder)
+        private static void ConfigureSubscription(EntityTypeBuilder<Subscription> builder)
         {
             builder.HasKey(s => new
             {
@@ -142,7 +142,7 @@ namespace NameThatTitle.Data.DbContexts
             });
         }
 
-        private void ConfigureFavorite(EntityTypeBuilder<Favorite> builder)
+        private static void ConfigureFavorite(EntityTypeBuilder<Favorite> builder)
         {
             builder.HasKey(f => new
             {

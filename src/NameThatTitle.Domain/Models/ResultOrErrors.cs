@@ -10,7 +10,7 @@ namespace NameThatTitle.Domain.Models
         public IEnumerable<TError> Errors { get; }
 
         public bool Succeeded =>
-            Errors == null || Errors.Count() == 0;
+            Errors == null || !Errors.Any();
 
         public ResultOrErrors(IEnumerable<TError> errors)
         {
@@ -30,25 +30,18 @@ namespace NameThatTitle.Domain.Models
     {
         public TResult Result { get; }
 
-        public ResultOrErrors(TResult result, IEnumerable<TError> errors) : base(errors)
+        public ResultOrErrors(TResult result, IEnumerable<TError> errors) 
+            : base(errors)
         {
             Result = result;
         }
 
         public ResultOrErrors(TResult result, params TError[] errors)
-            : base(errors.AsEnumerable()) { }
+            : this(result, errors.AsEnumerable()) { }
 
         public new (TResult, IEnumerable<TError>) AsTuple()
         {
             return (Result, Errors);
-        }
-    }
-
-    public static class ErrorListExtentions
-    {
-        public static bool IsNullOrEmpty<TError>(this IEnumerable<TError> errors)
-        {
-            return errors == null || errors.Count() == 0;
         }
     }
 }

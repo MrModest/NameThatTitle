@@ -12,7 +12,7 @@ namespace NameThatTitle.Domain.Models.Users
         public DateTime RegisteredAt { get; set; }
         public DateTime LastOnlineAt { get; set; }
 
-        public int Warning { get; set; } // in procent (0 - 100), 100 means ban
+        public int Warning { get; set; } // in percent (0 - 100), 100 means ban
 
         public virtual ICollection<RefreshToken> RefreshTokens { get; set; }
     }

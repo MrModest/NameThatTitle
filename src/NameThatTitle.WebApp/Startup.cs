@@ -73,8 +73,8 @@ namespace NameThatTitle.WebApp
             //? Is it works for SPA?
             services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
 
-            services.AddTransient(typeof(IRepository<>), typeof(EFRepository<>));
-            services.AddTransient(typeof(IAsyncRepository<>), typeof(EFRepository<>));
+            services.AddTransient(typeof(IRepository<>), typeof(EfRepository<>));
+            services.AddTransient(typeof(IAsyncRepository<>), typeof(EfRepository<>));
             services.AddTransient<IAsyncRefreshTokenRepository, RefreshTokenRepository>();
             services.AddTransient<ITokenHandler, JwtHandler>();
             services.AddTransient<IAccountService, AccountService>();
@@ -94,7 +94,7 @@ namespace NameThatTitle.WebApp
                         ValidateLifetime = true,
 
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["Token:Key"])),
-                        ValidateIssuerSigningKey = true,
+                        ValidateIssuerSigningKey = true
                     };
                 });
 

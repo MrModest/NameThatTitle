@@ -29,7 +29,7 @@ namespace NameThatTitle.WebApp.ViewModels
 
         //[Display(Name = "")]
         [DataType(DataType.Password)]
-        [Compare("Password", ErrorMessage = "Confirm password must be equil to password!")]
+        [Compare("Password", ErrorMessage = "Confirm password must be equal to password!")]
         [JsonProperty("confirm_password")]
         public string ConfirmPassword { get; set; }
     }

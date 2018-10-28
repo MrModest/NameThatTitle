@@ -9,11 +9,11 @@ using NameThatTitle.Domain.Models;
 
 namespace NameThatTitle.Data.Repositories
 {
-    public class EFRepository<TEntity> : IRepository<TEntity>, IAsyncRepository<TEntity> where TEntity : BaseEntity
+    public class EfRepository<TEntity> : IRepository<TEntity>, IAsyncRepository<TEntity> where TEntity : BaseEntity
     {
         protected readonly ForumContext _context;
 
-        public EFRepository(ForumContext context)
+        public EfRepository(ForumContext context)
         {
             _context = context;
         }

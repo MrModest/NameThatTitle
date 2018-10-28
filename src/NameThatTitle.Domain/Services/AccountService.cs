@@ -74,10 +74,10 @@ namespace NameThatTitle.Domain.Services
             _logger.InitMethod(nameof(SignUpAsync), username, email, "pass");
 
             var inputErrors = new List<string>();
-            if (String.IsNullOrWhiteSpace(username)) { inputErrors.Add(_localizer["Username is empty!"]); }
-            if (String.IsNullOrWhiteSpace(email))    { inputErrors.Add(_localizer["Email is empty!"]);    }
-            if (String.IsNullOrWhiteSpace(password)) { inputErrors.Add(_localizer["Password is empty!"]); }
-            if (inputErrors.Count > 0)
+            if (string.IsNullOrWhiteSpace(username)) { inputErrors.Add(_localizer["Username is empty!"]); }
+            if (string.IsNullOrWhiteSpace(email))    { inputErrors.Add(_localizer["Email is empty!"]);    }
+            if (string.IsNullOrWhiteSpace(password)) { inputErrors.Add(_localizer["Password is empty!"]); }
+            if (inputErrors.IsNotEmpty())
             {
                 _logger.SkipInvalidInput();
                 return new ResultOrErrors<OAuthToken, string>(null, inputErrors);
@@ -87,13 +87,13 @@ namespace NameThatTitle.Domain.Services
             var userAccount = new UserAccount { UserName = username, Email = email, RegisteredAt = now, LastOnlineAt = now};
 
             var (_, errors) = (await _userManager.CreateAsync(userAccount, password)).AsTuple(); //? check "already exist"?
-            if (!errors.IsNullOrEmpty())
+            if (errors.IsNotEmpty())
             {
                 _logger.LogWarning("fail creating");
                 return new ResultOrErrors<OAuthToken, string>(null, errors);
             }
 
-            var userProfile = await _userProfileRep.AddAsync(new UserProfile
+            await _userProfileRep.AddAsync(new UserProfile
             {
                 Id = userAccount.Id,
                 UserName = userAccount.UserName
@@ -113,9 +113,9 @@ namespace NameThatTitle.Domain.Services
             _logger.InitMethod(nameof(SignInAsync), login, "pass");
 
             var inputErrors = new List<string>();
-            if (String.IsNullOrWhiteSpace(login))    { inputErrors.Add(_localizer["Username/Email is empty!"]); }
-            if (String.IsNullOrWhiteSpace(password)) { inputErrors.Add(_localizer["Password is empty!"]);       }
-            if (inputErrors.Count > 0)
+            if (string.IsNullOrWhiteSpace(login))    { inputErrors.Add(_localizer["Username/Email is empty!"]); }
+            if (string.IsNullOrWhiteSpace(password)) { inputErrors.Add(_localizer["Password is empty!"]);       }
+            if (!inputErrors.IsNullOrEmpty()) //ToDo: change all same to 'IsNotEmpty'
             {
                 _logger.SkipInvalidInput();
                 return new ResultOrErrors<OAuthToken, string>(null, inputErrors);
@@ -149,7 +149,7 @@ namespace NameThatTitle.Domain.Services
         {
             _logger.InitMethod(nameof(RefreshTokenAsync), $"[Length] {refreshToken?.Length}");
 
-            if (String.IsNullOrWhiteSpace(refreshToken))
+            if (string.IsNullOrWhiteSpace(refreshToken))
             {
                 _logger.SkipInvalidInput();
                 return new ResultOrErrors<OAuthToken, string>(null, _localizer["Refresh token is Empty!"]);
@@ -196,7 +196,7 @@ namespace NameThatTitle.Domain.Services
         {
             _logger.InitMethod(nameof(RevokeTokenAsync), $"[Length] {refreshToken?.Length}");
 
-            if (String.IsNullOrWhiteSpace(refreshToken))
+            if (string.IsNullOrWhiteSpace(refreshToken))
             {
                 _logger.SkipInvalidInput();
                 return new ResultOrErrors<string>(_localizer["Refresh token is Empty!"]);
@@ -241,7 +241,7 @@ namespace NameThatTitle.Domain.Services
         {
             _logger.InitMethod(nameof(GenerateValidateTokenForResetPasswordAsync), email);
 
-            if (String.IsNullOrWhiteSpace(email))
+            if (string.IsNullOrWhiteSpace(email))
             {
                 _logger.SkipInvalidInput();
                 return new ResultOrErrors<string>(_localizer["Email is required!"]);
@@ -258,7 +258,7 @@ namespace NameThatTitle.Domain.Services
 
             _logger.LogInformation($"validateTokenLength: {validateToken?.Length}");
 
-            if (String.IsNullOrWhiteSpace(validateToken)) { return new ResultOrErrors<string>(_localizer["Can't generate validate token!"]); }
+            if (string.IsNullOrWhiteSpace(validateToken)) { return new ResultOrErrors<string>(_localizer["Can't generate validate token!"]); }
 
             await _emailSender.SendEmailAsync(new SendEmailOptions
             {
@@ -278,9 +278,9 @@ namespace NameThatTitle.Domain.Services
 
             var inputErrors = new List<string>();
             if (userId < 0)                               { inputErrors.Add(_localizer["Invalid user's id!"]); }
-            if (String.IsNullOrWhiteSpace(validateToken)) { inputErrors.Add(_localizer["Validate token is empty!"]); }
-            if (String.IsNullOrWhiteSpace(newPassword))   { inputErrors.Add(_localizer["New password is empty!"]); }
-            if (inputErrors.Count > 0)
+            if (string.IsNullOrWhiteSpace(validateToken)) { inputErrors.Add(_localizer["Validate token is empty!"]); }
+            if (string.IsNullOrWhiteSpace(newPassword))   { inputErrors.Add(_localizer["New password is empty!"]); }
+            if (!inputErrors.IsNullOrEmpty())
             {
                 _logger.SkipInvalidInput();
                 return new ResultOrErrors<OAuthToken, string>(null, inputErrors);
@@ -330,7 +330,7 @@ namespace NameThatTitle.Domain.Services
 
             _logger.LogInformation($"validateTokenLength: {validateToken?.Length}");
 
-            if (String.IsNullOrWhiteSpace(validateToken)) { return new ResultOrErrors<string>(_localizer["Can't generate validate token!"]); }
+            if (string.IsNullOrWhiteSpace(validateToken)) { return new ResultOrErrors<string>(_localizer["Can't generate validate token!"]); }
 
             await _emailSender.SendEmailAsync(new SendEmailOptions
             {
@@ -350,8 +350,8 @@ namespace NameThatTitle.Domain.Services
 
             var inputErrors = new List<string>();
             if (userId < 0) { inputErrors.Add(_localizer["Invalid user's id!"]); }
-            if (String.IsNullOrWhiteSpace(validateToken)) { inputErrors.Add(_localizer["Validate token is empty!"]); }
-            if (inputErrors.Count > 0)
+            if (string.IsNullOrWhiteSpace(validateToken)) { inputErrors.Add(_localizer["Validate token is empty!"]); }
+            if (!inputErrors.IsNullOrEmpty())
             {
                 _logger.SkipInvalidInput();
                 return new ResultOrErrors<string>(inputErrors);
@@ -363,14 +363,14 @@ namespace NameThatTitle.Domain.Services
                 return new ResultOrErrors<string>(errors);
             }
 
-            var result = (await _userManager.ConfirmEmailAsync(userAccount, validateToken)).AsTuple(); // EmailConfirmed set true inside
+            (_, errors) = (await _userManager.ConfirmEmailAsync(userAccount, validateToken)).AsTuple(); // EmailConfirmed set true inside
             if (!errors.IsNullOrEmpty())
             {
                 _logger.LogWarning("fail confirmation token");
                 return new ResultOrErrors<string>(errors);
             }
 
-            _logger.LogInformation("email successefully confirmed");
+            _logger.LogInformation("email successful confirmed");
 
             await _emailSender.SendEmailAsync(new SendEmailOptions
             {
@@ -388,9 +388,9 @@ namespace NameThatTitle.Domain.Services
 
             var inputErrors = new List<string>();
             if (userId < 0) { inputErrors.Add(_localizer["Invalid user's id!"]); }
-            if (String.IsNullOrWhiteSpace(currentPassword)) { inputErrors.Add(_localizer["Old password is empty!"]); }
-            if (String.IsNullOrWhiteSpace(newPassword)) { inputErrors.Add(_localizer["New password is empty!"]); }
-            if (inputErrors.Count > 0)
+            if (string.IsNullOrWhiteSpace(currentPassword)) { inputErrors.Add(_localizer["Old password is empty!"]); }
+            if (string.IsNullOrWhiteSpace(newPassword)) { inputErrors.Add(_localizer["New password is empty!"]); }
+            if (!inputErrors.IsNullOrEmpty())
             {
                 _logger.SkipInvalidInput();
                 return new ResultOrErrors<OAuthToken, string>(null, inputErrors);
@@ -420,7 +420,7 @@ namespace NameThatTitle.Domain.Services
 
             var inputErrors = new List<string>();
             if (userId < 0)                             { inputErrors.Add(_localizer["Invalid user's id!"]); }
-            if (String.IsNullOrWhiteSpace(newPassword)) { inputErrors.Add(_localizer["New password is empty!"]); }
+            if (string.IsNullOrWhiteSpace(newPassword)) { inputErrors.Add(_localizer["New password is empty!"]); }
             if (inputErrors.Count > 0)
             {
                 _logger.SkipInvalidInput();
@@ -460,7 +460,7 @@ namespace NameThatTitle.Domain.Services
 
             var inputErrors = new List<string>();
             if (userId < 0) { inputErrors.Add(_localizer["Invalid user's id!"]); }
-            if (String.IsNullOrWhiteSpace(newEmail)) { inputErrors.Add(_localizer["New email is required!"]); }
+            if (string.IsNullOrWhiteSpace(newEmail)) { inputErrors.Add(_localizer["New email is required!"]); }
             if (inputErrors.Count > 0)
             {
                 _logger.SkipInvalidInput();
@@ -477,7 +477,7 @@ namespace NameThatTitle.Domain.Services
 
             _logger.LogInformation($"validateTokenLength: {validateToken?.Length}");
 
-            if (String.IsNullOrWhiteSpace(validateToken)) { return new ResultOrErrors<string>(_localizer["Can't generate validate token!"]); }
+            if (string.IsNullOrWhiteSpace(validateToken)) { return new ResultOrErrors<string>(_localizer["Can't generate validate token!"]); }
 
             await _emailSender.SendEmailAsync(new SendEmailOptions
             {
@@ -497,8 +497,8 @@ namespace NameThatTitle.Domain.Services
 
             var inputErrors = new List<string>();
             if (userId < 0) { inputErrors.Add(_localizer["Invalid user's id!"]); }
-            if (String.IsNullOrWhiteSpace(validateToken)) { inputErrors.Add(_localizer["Validate token is empty!"]); }
-            if (String.IsNullOrWhiteSpace(newEmail)) { inputErrors.Add(_localizer["New Email is empty!"]); }
+            if (string.IsNullOrWhiteSpace(validateToken)) { inputErrors.Add(_localizer["Validate token is empty!"]); }
+            if (string.IsNullOrWhiteSpace(newEmail)) { inputErrors.Add(_localizer["New Email is empty!"]); }
             if (inputErrors.Count > 0)
             {
                 _logger.SkipInvalidInput();
@@ -518,7 +518,7 @@ namespace NameThatTitle.Domain.Services
                 return new ResultOrErrors<string>(errors);
             }
 
-            _logger.LogInformation("email successefully changed");
+            _logger.LogInformation("email successful changed");
 
             await _emailSender.SendEmailAsync(new SendEmailOptions
             {
@@ -536,8 +536,8 @@ namespace NameThatTitle.Domain.Services
 
             var inputErrors = new List<string>();
             if (userId < 0) { inputErrors.Add(_localizer["Invalid user's id!"]); }
-            if (String.IsNullOrWhiteSpace(newUserName)) { inputErrors.Add(_localizer["New username token is empty!"]); }
-            if (inputErrors.Count() > 0)
+            if (string.IsNullOrWhiteSpace(newUserName)) { inputErrors.Add(_localizer["New username token is empty!"]); }
+            if (!inputErrors.IsNullOrEmpty())
             {
                 _logger.SkipInvalidInput();
                 return new ResultOrErrors<string>(inputErrors);
@@ -666,12 +666,12 @@ namespace NameThatTitle.Domain.Services
                 {
                     if ((int)arg.Value < 0)
                     {
-                        errors.Add(_localizer[$"{arg.Key} is invaid!"]);
+                        errors.Add(_localizer[$"{arg.Key} is invalid!"]);
                     }
                 }
                 if (arg.Value is string)
                 {
-                    if (String.IsNullOrWhiteSpace((string)arg.Value))
+                    if (string.IsNullOrWhiteSpace((string)arg.Value))
                     {
                         errors.Add(_localizer[$"{arg.Key} is empty!"]);
                     }

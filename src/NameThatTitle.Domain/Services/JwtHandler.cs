@@ -15,7 +15,7 @@ namespace NameThatTitle.Domain.Services
         {
             var now = DateTime.UtcNow;
             var centuryBegin = new DateTime(1970, 1, 1).ToUniversalTime();
-            var expiresIn = (long)(TimeSpan.FromMinutes(expiresMinutes).TotalMilliseconds);
+            var expiresIn = expiresMinutes * 60 * 1000; // minutes -> milliseconds
             var createdAt = (long)((now - centuryBegin).TotalMilliseconds);
 
             var jwt = new JwtSecurityToken(
@@ -55,7 +55,7 @@ namespace NameThatTitle.Domain.Services
             }
         }
 
-        private string GenerateRefreshToken()
+        private static string GenerateRefreshToken()
         {
             var token = Guid.NewGuid().ToString("N");
 

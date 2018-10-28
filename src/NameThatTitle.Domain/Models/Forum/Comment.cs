@@ -23,7 +23,7 @@ namespace NameThatTitle.Domain.Models.Forum
 
         public int Rating { get; set; } //? "-1" divide by 2 when go to karma
         public bool Offtopic { get; set; } // "I don't know the answer, but I want to say something"
-        public bool CorectAnswer { get; set; }
+        public bool CorrectAnswer { get; set; }
 
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; } // at first equal to 'Created'

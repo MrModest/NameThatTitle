@@ -9,7 +9,7 @@ namespace NameThatTitle.Domain.Extensions
 {
     public static class UserManagerExtensions
     {
-        public async static Task<UserAccount> FindByEmailOrUserNameAsync(this UserManager<UserAccount> userManager, string login)
+        public static async Task<UserAccount> FindByEmailOrUserNameAsync(this UserManager<UserAccount> userManager, string login)
         {
             return login.Contains('@') ?
                 await userManager.FindByEmailAsync(login) :

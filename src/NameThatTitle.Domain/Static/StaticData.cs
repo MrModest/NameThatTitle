@@ -25,8 +25,8 @@ namespace NameThatTitle.Domain.Static
 
         public static class Culture
         {
-            public readonly static CultureInfo En = new CultureInfo("en");
-            public readonly static CultureInfo Ru = new CultureInfo("ru");
+            public static readonly CultureInfo En = new CultureInfo("en");
+            public static readonly CultureInfo Ru = new CultureInfo("ru");
         }
 
         public static class EmailTemplate

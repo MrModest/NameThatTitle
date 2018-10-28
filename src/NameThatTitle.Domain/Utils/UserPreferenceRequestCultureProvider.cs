@@ -12,11 +12,11 @@ namespace NameThatTitle.Domain.Utils
 {
     public class UserPreferenceRequestCultureProvider : RequestCultureProvider
     {
-        public string HeaderName = "Authorization";
+        private const string HeaderName = "Authorization";
 
-        public string TokenType = "bearer";
+        private const string TokenType = "bearer";
 
-        public string UserPreferenceParamName = "culture";
+        private const string UserPreferenceParamName = "culture";
 
         public override Task<ProviderCultureResult> DetermineProviderCultureResult(HttpContext httpContext)
         {
@@ -36,14 +36,14 @@ namespace NameThatTitle.Domain.Utils
 
             var claims = new JwtHandler().GetClaimsFromToken(accessToken); //? Should I use DI from httpContext for inject ITokenHandler?
 
-            if (claims == null || claims.Count() == 0)
+            if (claims == null || !claims.Any()) //ToDo: Extensions IEnumerable.IsNullOrEmpty()
             {
                 return NullProviderCultureResult;
             }
 
             var cultureName = claims.FirstOrDefault(c => c.Type == UserPreferenceParamName)?.Value;
 
-            if (String.IsNullOrWhiteSpace(cultureName))
+            if (string.IsNullOrWhiteSpace(cultureName))
             {
                 return NullProviderCultureResult;
             }

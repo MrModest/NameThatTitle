@@ -7,9 +7,9 @@ using NameThatTitle.Domain.Models.Token;
 
 namespace NameThatTitle.Domain.Extensions
 {
-    public static class IAsyncRefreshTokenRepositoryExtensions
+    public static class AsyncRefreshTokenRepositoryExtensions
     {
-        public async static Task<RefreshToken> AddAsync(this IAsyncRefreshTokenRepository repository, OAuthToken oAuth, int userId, string deviceName = null)
+        public static async Task<RefreshToken> AddAsync(this IAsyncRefreshTokenRepository repository, OAuthToken oAuth, int userId, string deviceName = null)
         {
             return await repository.AddAsync(new RefreshToken
             {

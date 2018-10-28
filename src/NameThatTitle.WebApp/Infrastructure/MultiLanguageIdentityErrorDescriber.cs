@@ -88,42 +88,42 @@ namespace NameThatTitle.WebApp.Infrastructure
 
         public override IdentityError PasswordRequiresUniqueChars(int uniqueChars)
         {
-            return (Localize(base.PasswordRequiresUniqueChars(uniqueChars), uniqueChars));
+            return Localize(base.PasswordRequiresUniqueChars(uniqueChars), uniqueChars);
         }
 
         public override IdentityError PasswordRequiresUpper()
         {
-            return (Localize(base.PasswordRequiresUpper()));
+            return Localize(base.PasswordRequiresUpper());
         }
 
         public override IdentityError PasswordTooShort(int length)
         {
-            return (Localize(base.PasswordTooShort(length), length));
+            return Localize(base.PasswordTooShort(length), length);
         }
 
         public override IdentityError RecoveryCodeRedemptionFailed()
         {
-            return (Localize(base.RecoveryCodeRedemptionFailed()));
+            return Localize(base.RecoveryCodeRedemptionFailed());
         }
 
         public override IdentityError UserAlreadyHasPassword()
         {
-            return (Localize(base.UserAlreadyHasPassword()));
+            return Localize(base.UserAlreadyHasPassword());
         }
 
         public override IdentityError UserAlreadyInRole(string role)
         {
-            return (Localize(base.UserAlreadyInRole(role), role));
+            return Localize(base.UserAlreadyInRole(role), role);
         }
 
         public override IdentityError UserLockoutNotEnabled()
         {
-            return (Localize(base.UserLockoutNotEnabled()));
+            return Localize(base.UserLockoutNotEnabled());
         }
 
         public override IdentityError UserNotInRole(string role)
         {
-            return (Localize(base.UserNotInRole(role), role));
+            return Localize(base.UserNotInRole(role), role);
         }
 
 
@@ -133,13 +133,7 @@ namespace NameThatTitle.WebApp.Infrastructure
             return ie;
         }
 
-        private IdentityError Localize(IdentityError ie, string arg)
-        {
-            ie.Description = _localizer[ie.Description, arg];
-            return ie;
-        }
-
-        private IdentityError Localize(IdentityError ie, int arg)
+        private IdentityError Localize(IdentityError ie, object arg)
         {
             ie.Description = _localizer[ie.Description, arg];
             return ie;
