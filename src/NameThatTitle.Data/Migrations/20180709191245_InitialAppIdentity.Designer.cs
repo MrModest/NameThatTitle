@@ -102,7 +102,7 @@ namespace NameThatTitle.Data.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
-            modelBuilder.Entity("NameThatTitle.Domain.Models.Users.UserAccount", b =>
+            modelBuilder.Entity("NameThatTitle.Core.Models.Users.UserAccount", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
@@ -158,7 +158,7 @@ namespace NameThatTitle.Data.Migrations
                     b.ToTable("AspNetUsers");
                 });
 
-            modelBuilder.Entity("NameThatTitle.Domain.Models.Users.UserRole", b =>
+            modelBuilder.Entity("NameThatTitle.Core.Models.Users.UserRole", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
@@ -183,7 +183,7 @@ namespace NameThatTitle.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
-                    b.HasOne("NameThatTitle.Domain.Models.Users.UserRole")
+                    b.HasOne("NameThatTitle.Core.Models.Users.UserRole")
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade);
@@ -191,7 +191,7 @@ namespace NameThatTitle.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
                 {
-                    b.HasOne("NameThatTitle.Domain.Models.Users.UserAccount")
+                    b.HasOne("NameThatTitle.Core.Models.Users.UserAccount")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);
@@ -199,7 +199,7 @@ namespace NameThatTitle.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
                 {
-                    b.HasOne("NameThatTitle.Domain.Models.Users.UserAccount")
+                    b.HasOne("NameThatTitle.Core.Models.Users.UserAccount")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);
@@ -207,12 +207,12 @@ namespace NameThatTitle.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
                 {
-                    b.HasOne("NameThatTitle.Domain.Models.Users.UserRole")
+                    b.HasOne("NameThatTitle.Core.Models.Users.UserRole")
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("NameThatTitle.Domain.Models.Users.UserAccount")
+                    b.HasOne("NameThatTitle.Core.Models.Users.UserAccount")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);
@@ -220,7 +220,7 @@ namespace NameThatTitle.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
                 {
-                    b.HasOne("NameThatTitle.Domain.Models.Users.UserAccount")
+                    b.HasOne("NameThatTitle.Core.Models.Users.UserAccount")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);

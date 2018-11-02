@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NameThatTitle.Data.DbContexts;
-using NameThatTitle.Domain.Interfaces.Repositories;
-using NameThatTitle.Domain.Models;
+using NameThatTitle.Core.Interfaces.Repositories;
+using NameThatTitle.Core.Models;
 
 namespace NameThatTitle.Data.Repositories
 {

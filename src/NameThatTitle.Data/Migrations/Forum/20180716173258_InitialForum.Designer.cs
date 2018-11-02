@@ -21,7 +21,7 @@ namespace NameThatTitle.Data.Migrations.Forum
                 .HasAnnotation("ProductVersion", "2.1.0-rtm-30799")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            modelBuilder.Entity("NameThatTitle.Domain.Models.Forum.Attachment", b =>
+            modelBuilder.Entity("NameThatTitle.Core.Models.Forum.Attachment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
@@ -43,7 +43,7 @@ namespace NameThatTitle.Data.Migrations.Forum
                     b.ToTable("Attachment");
                 });
 
-            modelBuilder.Entity("NameThatTitle.Domain.Models.Forum.Comment", b =>
+            modelBuilder.Entity("NameThatTitle.Core.Models.Forum.Comment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
@@ -77,7 +77,7 @@ namespace NameThatTitle.Data.Migrations.Forum
                     b.ToTable("Comments");
                 });
 
-            modelBuilder.Entity("NameThatTitle.Domain.Models.Forum.Forum", b =>
+            modelBuilder.Entity("NameThatTitle.Core.Models.Forum.Forum", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
@@ -91,7 +91,7 @@ namespace NameThatTitle.Data.Migrations.Forum
                     b.ToTable("Forums");
                 });
 
-            modelBuilder.Entity("NameThatTitle.Domain.Models.Forum.Post", b =>
+            modelBuilder.Entity("NameThatTitle.Core.Models.Forum.Post", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
@@ -125,7 +125,7 @@ namespace NameThatTitle.Data.Migrations.Forum
                     b.ToTable("Posts");
                 });
 
-            modelBuilder.Entity("NameThatTitle.Domain.Models.Users.UserProfile", b =>
+            modelBuilder.Entity("NameThatTitle.Core.Models.Users.UserProfile", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
@@ -143,7 +143,7 @@ namespace NameThatTitle.Data.Migrations.Forum
                     b.ToTable("UserProfiles");
                 });
 
-            modelBuilder.Entity("NameThatTitle.Domain.Models.Users.UserStatistic", b =>
+            modelBuilder.Entity("NameThatTitle.Core.Models.Users.UserStatistic", b =>
                 {
                     b.Property<int>("Id");
 
@@ -158,52 +158,52 @@ namespace NameThatTitle.Data.Migrations.Forum
                     b.ToTable("UserStatistics");
                 });
 
-            modelBuilder.Entity("NameThatTitle.Domain.Models.Forum.Attachment", b =>
+            modelBuilder.Entity("NameThatTitle.Core.Models.Forum.Attachment", b =>
                 {
-                    b.HasOne("NameThatTitle.Domain.Models.Forum.Comment")
+                    b.HasOne("NameThatTitle.Core.Models.Forum.Comment")
                         .WithMany("Attachments")
                         .HasForeignKey("CommentId");
 
-                    b.HasOne("NameThatTitle.Domain.Models.Forum.Post")
+                    b.HasOne("NameThatTitle.Core.Models.Forum.Post")
                         .WithMany("Attachments")
                         .HasForeignKey("PostId");
                 });
 
-            modelBuilder.Entity("NameThatTitle.Domain.Models.Forum.Comment", b =>
+            modelBuilder.Entity("NameThatTitle.Core.Models.Forum.Comment", b =>
                 {
-                    b.HasOne("NameThatTitle.Domain.Models.Users.UserProfile", "Author")
+                    b.HasOne("NameThatTitle.Core.Models.Users.UserProfile", "Author")
                         .WithMany("Comments")
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("NameThatTitle.Domain.Models.Forum.Comment", "Parent")
+                    b.HasOne("NameThatTitle.Core.Models.Forum.Comment", "Parent")
                         .WithMany("Childs")
                         .HasForeignKey("ParentId");
 
-                    b.HasOne("NameThatTitle.Domain.Models.Forum.Post", "Post")
+                    b.HasOne("NameThatTitle.Core.Models.Forum.Post", "Post")
                         .WithMany("Comments")
                         .HasForeignKey("PostId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("NameThatTitle.Domain.Models.Forum.Post", b =>
+            modelBuilder.Entity("NameThatTitle.Core.Models.Forum.Post", b =>
                 {
-                    b.HasOne("NameThatTitle.Domain.Models.Users.UserProfile", "Author")
+                    b.HasOne("NameThatTitle.Core.Models.Users.UserProfile", "Author")
                         .WithMany("Posts")
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("NameThatTitle.Domain.Models.Forum.Forum", "Forum")
+                    b.HasOne("NameThatTitle.Core.Models.Forum.Forum", "Forum")
                         .WithMany("Posts")
                         .HasForeignKey("ForumId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("NameThatTitle.Domain.Models.Users.UserStatistic", b =>
+            modelBuilder.Entity("NameThatTitle.Core.Models.Users.UserStatistic", b =>
                 {
-                    b.HasOne("NameThatTitle.Domain.Models.Users.UserProfile", "Profile")
+                    b.HasOne("NameThatTitle.Core.Models.Users.UserProfile", "Profile")
                         .WithOne("Statistic")
-                        .HasForeignKey("NameThatTitle.Domain.Models.Users.UserStatistic", "Id")
+                        .HasForeignKey("NameThatTitle.Core.Models.Users.UserStatistic", "Id")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618

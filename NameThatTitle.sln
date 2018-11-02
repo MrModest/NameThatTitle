@@ -7,7 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{FC1A65CB-AD8
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{6702FE21-7010-471A-9E95-7812DF685762}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NameThatTitle.Domain", "src\NameThatTitle.Domain\NameThatTitle.Domain.csproj", "{AF79A22F-7C41-48CA-918B-BBA62EF391F3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NameThatTitle.Core", "src\NameThatTitle.Core\NameThatTitle.Core.csproj", "{AF79A22F-7C41-48CA-918B-BBA62EF391F3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NameThatTitle.Data", "src\NameThatTitle.Data\NameThatTitle.Data.csproj", "{48D78A83-8F1A-4394-8A3D-82794CCA0018}"
 EndProject

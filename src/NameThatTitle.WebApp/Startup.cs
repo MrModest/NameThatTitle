@@ -20,12 +20,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using NameThatTitle.Data.DbContexts;
 using NameThatTitle.Data.Repositories;
-using NameThatTitle.Domain.Interfaces.Repositories;
-using NameThatTitle.Domain.Interfaces.Services;
-using NameThatTitle.Domain.Models.Users;
-using NameThatTitle.Domain.Services;
-using NameThatTitle.Domain.Static;
-using NameThatTitle.Domain.Utils;
+using NameThatTitle.Core.Interfaces.Repositories;
+using NameThatTitle.Core.Interfaces.Services;
+using NameThatTitle.Core.Models.Users;
+using NameThatTitle.Core.Services;
+using NameThatTitle.Core.Static;
+using NameThatTitle.Core.Utils;
 using NameThatTitle.WebApp.Infrastructure;
 
 namespace NameThatTitle.WebApp
@@ -105,6 +105,7 @@ namespace NameThatTitle.WebApp
                     .Build();
             });
 
+            //ToDo: Change to DbTable. Also add Controllers for Web GUI for add translated string (it's let add localization with community)
             services.AddLocalization(options => options.ResourcesPath = "Localizations");
 
             services.AddMvc()
@@ -127,7 +128,7 @@ namespace NameThatTitle.WebApp
             }
             else
             {
-                app.UseExceptionHandler("/Error"); //ToDo: do it better
+                app.UseExceptionHandler("/Error"); //ToDo: throw custom exception from methods/services/controllers than catch him and response BadRequest with error json
                 app.UseHsts();
             }
 
@@ -137,6 +138,8 @@ namespace NameThatTitle.WebApp
             app.UseStaticFiles();
             app.UseSpaStaticFiles();
             app.UseAuthentication();
+
+            app.UseMiddleware<ErrorHandler.ErrorHandlerMiddleware>(); //ToDo: replace to Extension: 'app.UseErrorHandler()'
 
             app.UseMvc(routes =>
             {

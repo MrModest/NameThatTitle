@@ -16,13 +16,13 @@
 
   <ItemGroup>
     <Folder Include="ClientApp\" />
-    <Folder Include="Localizations\NameThatTitle\Domain\Services\" />
+    <Folder Include="Localizations\NameThatTitle\Core\Services\" />
     <Folder Include="Localizations\NameThatTitle\WebApp\" />
   </ItemGroup>
 
   <ItemGroup>
+	<ProjectReference Include="..\NameThatTitle.Core\NameThatTitle.Core.csproj" />
     <ProjectReference Include="..\NameThatTitle.Data\NameThatTitle.Data.csproj" />
-    <ProjectReference Include="..\NameThatTitle.Domain\NameThatTitle.Domain.csproj" />
   </ItemGroup>
   
   <ItemGroup>

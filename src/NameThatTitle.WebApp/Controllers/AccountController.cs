@@ -12,13 +12,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using NameThatTitle.Domain.Interfaces.Repositories;
-using NameThatTitle.Domain.Interfaces.Services;
-using NameThatTitle.Domain.Extensions;
-using NameThatTitle.Domain.Models.Token;
-using NameThatTitle.Domain.Models.Users;
+using NameThatTitle.Core.Interfaces.Repositories;
+using NameThatTitle.Core.Interfaces.Services;
+using NameThatTitle.Core.Extensions;
+using NameThatTitle.Core.Models.Token;
+using NameThatTitle.Core.Models.Users;
 using NameThatTitle.WebApp.ViewModels;
-using NameThatTitle.Domain.Models;
+using NameThatTitle.Core.Models;
 
 namespace NameThatTitle.WebApp.Controllers
 {

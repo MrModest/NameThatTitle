@@ -5,8 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using NameThatTitle.Data.DbContexts;
-using NameThatTitle.Domain.Interfaces.Repositories;
-using NameThatTitle.Domain.Models.Token;
+using NameThatTitle.Core.Interfaces.Repositories;
+using NameThatTitle.Core.Models.Token;
 
 namespace NameThatTitle.Data.Repositories
 {

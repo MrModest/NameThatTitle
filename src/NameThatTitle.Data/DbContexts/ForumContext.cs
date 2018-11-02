@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using NameThatTitle.Domain.Models.Forum;
-using NameThatTitle.Domain.Models.Users;
-using NameThatTitle.Domain.Static;
+using NameThatTitle.Core.Models.Forum;
+using NameThatTitle.Core.Models.Users;
+using NameThatTitle.Core.Static;
 
 namespace NameThatTitle.Data.DbContexts
 {

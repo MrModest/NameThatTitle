@@ -5,10 +5,10 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.AspNetCore.Identity;
-using NameThatTitle.Domain.Models.Users;
-using NameThatTitle.Domain.Models.Forum;
-using NameThatTitle.Domain.Static;
-using NameThatTitle.Domain.Models.Token;
+using NameThatTitle.Core.Models.Users;
+using NameThatTitle.Core.Models.Forum;
+using NameThatTitle.Core.Static;
+using NameThatTitle.Core.Models.Token;
 
 namespace NameThatTitle.Data.DbContexts
 {
