@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity.UI.Services;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using NameThatTitle.Core.Interfaces.Services;
 
 namespace NameThatTitle.Core.Extensions
 {
@@ -15,6 +15,11 @@ namespace NameThatTitle.Core.Extensions
                 throw new ArgumentNullException(nameof(options));
             }
 
+            //ToDo: change validation method
+            if (string.IsNullOrWhiteSpace(options.Email))   { throw new ArgumentNullException(nameof(options.Email)); }
+            if (string.IsNullOrWhiteSpace(options.Subject)) { throw new ArgumentNullException(nameof(options.Subject)); }
+            if (string.IsNullOrWhiteSpace(options.Body))    { throw new ArgumentNullException(nameof(options.Body)); }
+
             await emailSender.SendEmailAsync(options.Email, options.Subject, options.Body);
         }
 
@@ -23,11 +28,7 @@ namespace NameThatTitle.Core.Extensions
             var options = new SendEmailOptions();
             optionsAction(options);
 
-            if (string.IsNullOrWhiteSpace(options.Email))   { throw new ArgumentNullException(nameof(options.Email)); }
-            if (string.IsNullOrWhiteSpace(options.Subject)) { throw new ArgumentNullException(nameof(options.Subject)); }
-            if (string.IsNullOrWhiteSpace(options.Body))    { throw new ArgumentNullException(nameof(options.Body)); }
-
-            await emailSender.SendEmailAsync(options.Email, options.Subject, options.Body);
+            await emailSender.SendEmailAsync(options);
         }
     }
 

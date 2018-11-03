@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
@@ -22,11 +21,10 @@ using NameThatTitle.Data.DbContexts;
 using NameThatTitle.Data.Repositories;
 using NameThatTitle.Core.Interfaces.Repositories;
 using NameThatTitle.Core.Interfaces.Services;
-using NameThatTitle.Core.Models.Users;
-using NameThatTitle.Core.Services;
+using NameThatTitle.Core.Models.Users; 
 using NameThatTitle.Core.Static;
-using NameThatTitle.Core.Utils;
 using NameThatTitle.WebApp.Infrastructure;
+using NameThatTitle.Services.Implementations;
 
 namespace NameThatTitle.WebApp
 {
@@ -73,11 +71,14 @@ namespace NameThatTitle.WebApp
             //? Is it works for SPA?
             services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
 
+            //ToDo: replace to extension 'services.AddServiceImplementations' also 'services.AddRepositories'
             services.AddTransient(typeof(IRepository<>), typeof(EfRepository<>));
             services.AddTransient(typeof(IAsyncRepository<>), typeof(EfRepository<>));
             services.AddTransient<IAsyncRefreshTokenRepository, RefreshTokenRepository>();
             services.AddTransient<ITokenHandler, JwtHandler>();
             services.AddTransient<IAccountService, AccountService>();
+            services.AddTransient<IEmailSender, EmailSenderMock>();
+            services.AddTransient<IEmailBodyBuilder, EmailBodyBuilderMock>();
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
@@ -105,14 +106,18 @@ namespace NameThatTitle.WebApp
                     .Build();
             });
 
-            //ToDo: Change to DbTable. Also add Controllers for Web GUI for add translated string (it's let add localization with community)
-            services.AddLocalization(options => options.ResourcesPath = "Localizations");
+            services.AddDbLocalization();
+
+            services.Configure<ApiBehaviorOptions>(options =>
+            {
+                options.SuppressModelStateInvalidFilter = true;
+            });
 
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
                 .AddDataAnnotationsLocalization();
 
-            services.Configure<RequestLocalizationOptions>(LocalizationUtils.ConfigureRequestLocalizationOptions);
+            services.ConfigureRequestLocalization();
 
             services.AddSpaStaticFiles(configuration =>
             {

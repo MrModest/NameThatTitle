@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace NameThatTitle.Commons.Static
+namespace NameThatTitle.Core.Static
 {
     public static class ErrorCodes
     {

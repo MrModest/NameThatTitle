@@ -7,15 +7,15 @@ namespace NameThatTitle.Core.Models.Error
 {
     public class InvalidInputException : Exception
     {
-        public IEnumerable<InvalidInput> InvalidInputs { get; }
+        public IEnumerable<string> ErrorMessages { get; }
 
-        public InvalidInputException(IEnumerable<InvalidInput> invalidInputs)
+        public InvalidInputException(IEnumerable<string> invalidInputs)
             : base(invalidInputs.ToJson())
         {
-            InvalidInputs = invalidInputs;
+            ErrorMessages = invalidInputs;
         }
 
-        public InvalidInputException(params InvalidInput[] invalidInputs)
+        public InvalidInputException(params string[] invalidInputs)
             : this(invalidInputs.AsEnumerable()) { }
     }
 }

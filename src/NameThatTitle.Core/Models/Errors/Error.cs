@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using NameThatTitle.Commons.Static;
+using NameThatTitle.Core.Static;
 using Newtonsoft.Json;
 
 namespace NameThatTitle.Core.Models.Error
@@ -13,9 +13,10 @@ namespace NameThatTitle.Core.Models.Error
         public string ErrorCode { get; }
         public string Message { get; }
 
-        public Error(int code, string ErrorCode, string message)
+        public Error(int code, string errorCode, string message)
         {
             StatusCode = code;
+            ErrorCode = errorCode;
             Message = message;
         }
 

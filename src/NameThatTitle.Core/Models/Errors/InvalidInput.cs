@@ -8,15 +8,13 @@ namespace NameThatTitle.Core.Models.Error
 {
     public class InvalidInput
     {
-        public string InputName { get; }
-        public string InputValue { get; }
-        public string Message { get; }
+        public string Value { get; }
+        public string ErrorMessage { get; }
 
-        public InvalidInput(string inputName, string inputValue, string message)
+        public InvalidInput(string value, string errorMessage)
         {
-            InputName = inputName;
-            InputValue = inputValue;
-            Message = message;
+            Value = value;
+            ErrorMessage = errorMessage;
         }
     }
 }

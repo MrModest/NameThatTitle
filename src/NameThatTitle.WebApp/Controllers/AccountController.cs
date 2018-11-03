@@ -19,6 +19,7 @@ using NameThatTitle.Core.Models.Token;
 using NameThatTitle.Core.Models.Users;
 using NameThatTitle.WebApp.ViewModels;
 using NameThatTitle.Core.Models;
+using Microsoft.Extensions.Localization;
 
 namespace NameThatTitle.WebApp.Controllers
 {
@@ -28,6 +29,7 @@ namespace NameThatTitle.WebApp.Controllers
     public class AccountController : ControllerBase
     {
         private readonly ILogger<AccountController> _logger;
+        private readonly IStringLocalizer<AccountController> _localizer;
 
         private readonly UserManager<UserAccount> _userManager;
         private readonly SignInManager<UserAccount> _signInManager;
@@ -38,6 +40,7 @@ namespace NameThatTitle.WebApp.Controllers
 
         public AccountController(
             ILogger<AccountController> logger,
+            IStringLocalizer<AccountController> localizer,
 
             UserManager<UserAccount> userManager,
             SignInManager<UserAccount> signInManager,
@@ -47,6 +50,7 @@ namespace NameThatTitle.WebApp.Controllers
             IAccountService accountService)
         {
             _logger = logger;
+            _localizer = localizer;
 
             _userManager = userManager;
             _signInManager = signInManager;
@@ -62,17 +66,9 @@ namespace NameThatTitle.WebApp.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> SignUp([FromBody] RegisterModel model)
         {
-            if (!ModelState.IsValid)
-            {
-                var modelErrors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage));
-                return BadRequest(modelErrors);
-            }
+            ModelState.Validate(_localizer);
 
-            var (oAuthToken, errors) = (await _accountService.SignUpAsync(model.UserName, model.Email, model.Password)).AsTuple();
-            if (!errors.IsNullOrEmpty())
-            {
-                return BadRequest(errors); 
-            }
+            var oAuthToken = await _accountService.SignUpAsync(model.UserName, model.Email, model.Password);
 
             return Ok(oAuthToken);
         }
@@ -81,17 +77,9 @@ namespace NameThatTitle.WebApp.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> SignIn([FromBody] LoginModel model)
         {
-            if (!ModelState.IsValid)
-            {
-                var modelErrors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage));
-                return BadRequest(modelErrors);
-            }
+            ModelState.Validate(_localizer);
 
-            var (oAuthToken, errors) = (await _accountService.SignInAsync(model.Login, model.Password)).AsTuple();
-            if (!errors.IsNullOrEmpty())
-            {
-                return BadRequest(errors);
-            }
+            var oAuthToken = await _accountService.SignInAsync(model.Login, model.Password);
 
             return Ok(oAuthToken);
         }
@@ -100,11 +88,7 @@ namespace NameThatTitle.WebApp.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> RefreshToken(string refreshToken)
         {
-            var (oAuthToken, errors) = (await _accountService.RefreshTokenAsync(refreshToken)).AsTuple();
-            if (!errors.IsNullOrEmpty())
-            {
-                return BadRequest(errors);
-            }
+            var oAuthToken = await _accountService.RefreshTokenAsync(refreshToken);
 
             return Ok(oAuthToken);
         }
@@ -113,11 +97,7 @@ namespace NameThatTitle.WebApp.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> RevokeToken(string refreshToken)
         {
-            var (_, errors) = (await _accountService.RevokeTokenAsync(refreshToken)).AsTuple();
-            if (!errors.IsNullOrEmpty())
-            {
-                return BadRequest(errors);
-            }
+            await _accountService.RevokeTokenAsync(refreshToken);
 
             return NoContent();
         }
@@ -125,11 +105,7 @@ namespace NameThatTitle.WebApp.Controllers
         [HttpPost]
         public async Task<IActionResult> RevokeAllTokens()
         {
-            var (_, errors) = (await _accountService.RevokeAllTokensAsync(User.GetUserId())).AsTuple();
-            if (!errors.IsNullOrEmpty())
-            {
-                return BadRequest(errors);
-            }
+            await _accountService.RevokeAllTokensAsync(User.GetUserId());
 
             return NoContent();
         }
@@ -137,11 +113,7 @@ namespace NameThatTitle.WebApp.Controllers
         [HttpPost]
         public async Task<IActionResult> ChangePassword(string newPassword)
         {
-            var (oAuthToken, errors) = (await _accountService.ChangePasswordAsync(User.GetUserId(), newPassword)).AsTuple();
-            if (!errors.IsNullOrEmpty())
-            {
-                return BadRequest(errors);
-            }
+            var oAuthToken = await _accountService.ChangePasswordAsync(User.GetUserId(), newPassword);
 
             return Ok(oAuthToken);
         }

@@ -7,7 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using NameThatTitle.Core.Interfaces.Services;
 using NameThatTitle.Core.Models.Token;
 
-namespace NameThatTitle.Core.Services
+namespace NameThatTitle.Services.Implementations
 {
     public class JwtHandler : ITokenHandler
     {

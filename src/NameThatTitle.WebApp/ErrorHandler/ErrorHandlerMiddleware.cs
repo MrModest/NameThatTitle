@@ -14,9 +14,9 @@ namespace NameThatTitle.WebApp.ErrorHandler
     public class ErrorHandlerMiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly ILogger _logger;
+        private readonly ILogger<ErrorHandlerMiddleware> _logger;
 
-        public ErrorHandlerMiddleware(RequestDelegate next, ILogger logger)
+        public ErrorHandlerMiddleware(RequestDelegate next, ILogger<ErrorHandlerMiddleware> logger)
         {
             _next = next;
             _logger = logger;
@@ -30,12 +30,12 @@ namespace NameThatTitle.WebApp.ErrorHandler
             }
             catch (InvalidInputException ex)
             {
-                _logger.LogWarning($"Invalid input:\n{ex.Message}\n");
+                _logger.LogWarning($"Invalid input:\n{ex.Message}\n"); 
                 await HandleInputValidationErrors(httpContext, ex);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Unknown error:\n{ex.Message}\n");
+                _logger.LogError($"Unknown error:\n{ex.Message}\n"); 
                 await HandleUnknownError(httpContext, ex);
             }
         }
