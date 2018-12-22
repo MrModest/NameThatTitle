@@ -4,6 +4,7 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using NameThatTitle.Core.Models.Forum;
+using NameThatTitle.Core.Models.Localization;
 using NameThatTitle.Core.Models.Users;
 using NameThatTitle.Core.Static;
 
@@ -25,6 +26,9 @@ namespace NameThatTitle.Data.DbContexts
         public DbSet<Subscription> Subscriptions { get; set; }
         public DbSet<Favorite> Favorites { get; set; }
 
+        public DbSet<Culture> Cultures { get; set; }
+        public DbSet<LocalizedResource> LocalizedResources { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -38,6 +42,9 @@ namespace NameThatTitle.Data.DbContexts
             //builder.Entity<Attachment>(ConfigureAttachment);
             builder.Entity<Subscription>(ConfigureSubscription);
             builder.Entity<Favorite>(ConfigureFavorite);
+
+            builder.Entity<Culture>(ConfigureCulture);
+            builder.Entity<LocalizedResource>(ConfigureLocalizedResource);
         }
 
         private static void ConfigureUserProfile(EntityTypeBuilder<UserProfile> builder)
@@ -149,6 +156,21 @@ namespace NameThatTitle.Data.DbContexts
                 f.UserId,
                 f.PostId
             });
+        }
+
+
+        private static void ConfigureCulture(EntityTypeBuilder<Culture> builder)
+        {
+            builder.HasKey(c => c.Id);
+        }
+
+        private static void ConfigureLocalizedResource(EntityTypeBuilder<LocalizedResource> builder)
+        {
+            builder.HasKey(lr => lr.Id);
+
+            builder.HasOne(lr => lr.Culture)
+                .WithMany(c => c.Resources)
+                .HasForeignKey(lr => lr.CultureId);
         }
     }
 }

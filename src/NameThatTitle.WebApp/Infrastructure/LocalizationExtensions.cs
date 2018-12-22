@@ -4,6 +4,8 @@ using System.Text;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Localization;
 using NameThatTitle.Core.Static;
 
 namespace NameThatTitle.WebApp.Infrastructure
@@ -11,9 +13,28 @@ namespace NameThatTitle.WebApp.Infrastructure
     public static class LocalizationExtensions //ToDo: replace it to separate project: 'NameThatTitle.Commons'
     {
         //ToDo: Change to DbTable. Also add Controllers for Web GUI for add translated string (it's let add localization with community)
-        public static IServiceCollection AddDbLocalization(this IServiceCollection services)
+        public static IServiceCollection AddDbLocalization(this IServiceCollection services, Action<DbLocalizationOptions> setupAction = null)
         {
-            services.AddLocalization(options => options.ResourcesPath = "Localizations");
+            if (services == null)
+            {
+                throw new ArgumentNullException(nameof(services));
+            }
+
+            services.TryAdd(new ServiceDescriptor(
+                typeof(IStringLocalizerFactory),
+                typeof(DbLocalizerFactory),
+                ServiceLifetime.Singleton));
+            services.TryAdd(new ServiceDescriptor(
+                typeof(IStringLocalizer),
+                typeof(DbLocalizer),
+                ServiceLifetime.Singleton));
+
+            if (setupAction != null)
+            {
+                services.Configure(setupAction);
+            }
+
+            //services.AddLocalization(options => options.ResourcesPath = "Localizations");
 
             return services;
         }

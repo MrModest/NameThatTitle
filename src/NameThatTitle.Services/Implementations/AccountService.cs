@@ -452,7 +452,7 @@ namespace NameThatTitle.Services.Implementations
         }
 
 
-        private async Task<OAuthToken> GetTokenAsync(UserAccount userAccount)
+        private async Task<OAuthToken> GetTokenAsync(UserAccount userAccount) //ToDo: think about update claim information in token
         {
             _logger.InitMethod(nameof(GetTokenAsync), $"[UserAccount.Id] {userAccount.Id}");
 
